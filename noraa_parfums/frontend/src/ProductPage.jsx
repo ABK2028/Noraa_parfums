@@ -1,446 +1,254 @@
-// src/ProductPage.jsx
-import React, { useContext, useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { CartContext } from "./context/CartContext";
-import { WishlistContext } from "./context/WishlistContext";
-import { PRODUCTS, Fallback } from "./data";
+import React, { useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { createPageUrl } from '../utils';
+import { motion } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRegion } from '../components/RegionContext';
+import { Heart, ArrowLeft, Clock, Droplets, Wind, TreePine, Search } from 'lucide-react';
+import LoadingBottle from '../components/LoadingBottle';
 
-export function ProductPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { addToCart } = useContext(CartContext);
-  const { wishlist, addToWishlist, removeFromWishlist } = useContext(WishlistContext);
+export default function ProductDetail() {
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get('id');
+  const { regionData } = useRegion();
+  const queryClient = useQueryClient();
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const product = PRODUCTS.find((p) => p.id === id);
-  const [activeImg, setActiveImg] = useState(0);
-  const [size, setSize] = useState(product?.sizes?.[0] || "");
-  const [color, setColor] = useState(product?.colors?.[0] || "");
-  const [msg, setMsg] = useState("");
-  const isInWishlist = product && wishlist && wishlist.some((item) => item.id === product.id);
+  const { data: product, isLoading } = useQuery({
+    queryKey: ['product', productId],
+    queryFn: async () => {
+      const products = await base44.entities.Product.filter({ id: productId });
+      return products[0];
+    },
+    enabled: !!productId,
+  });
 
-  // Reviews state
-  const [reviews, setReviews] = useState([]);
-  const [rating, setRating] = useState(5);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [reviewerName, setReviewerName] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: () => base44.entities.Favorite.list(),
+  });
 
-  // User authentication state
-  const [user, setUser] = useState(null);
+  const isFavorited = favorites.some(f => f.product_id === product?.id);
 
-  // Load user from sessionStorage (set during login)
-  useEffect(() => {
-    const storedUser = sessionStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (err) {
-        console.error("Error parsing user data:", err);
-      }
-    }
-  }, []);
-
-  // Load reviews from backend API
-  useEffect(() => {
-    if (product) {
-      loadReviews();
-    }
-  }, [product]);
-
-  const loadReviews = async () => {
-    setIsLoadingReviews(true);
-    try {
-      const response = await fetch(
-        `http://localhost:21051/api/reviews/${product.id}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setReviews(data || []);
+  const toggleFavorite = useMutation({
+    mutationFn: async () => {
+      if (isFavorited) {
+        const fav = favorites.find(f => f.product_id === product.id);
+        if (fav) await base44.entities.Favorite.delete(fav.id);
       } else {
-        console.error("Failed to load reviews:", response.statusText);
-        // Fallback to empty reviews
-        setReviews([]);
+        await base44.entities.Favorite.create({ product_id: product.id });
       }
-    } catch (err) {
-      console.error("Error loading reviews:", err);
-      // Fallback to empty reviews if API is not available
-      setReviews([]);
-    } finally {
-      setIsLoadingReviews(false);
-    }
-  };
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+  });
 
-  if (!product) {
+  React.useEffect(() => {
+    if (product?.sizes?.length > 0 && !selectedSize) {
+      setSelectedSize(product.sizes[0]);
+    }
+  }, [product, selectedSize]);
+
+  React.useEffect(() => {
+    if (product?.images?.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [product?.images]);
+
+  if (isLoading) {
     return (
-      <div className="container mt-5">
-        <div className="alert alert-warning">Product not found.</div>
-        <button className="btn btn-primary" onClick={() => navigate(-1)}>
-          Go Back
-        </button>
+      <div className="min-h-screen pt-20 flex items-center justify-center" style={{ backgroundColor: 'var(--color-dark)' }}>
+        <LoadingBottle size="lg" />
       </div>
     );
   }
 
-  const images = product.images || [product.image];
-
-  const handleColorSelect = (selectedColor) => {
-    setColor(selectedColor);
-    if (product?.colors?.length && images.length) {
-      const colorIndex = product.colors.indexOf(selectedColor);
-      if (colorIndex >= 0) {
-        const safeIndex = Math.min(colorIndex, images.length - 1);
-        setActiveImg(safeIndex);
-      }
-    }
-  };
-
-  const handleAddToCart = () => {
-    addToCart({
-      ...product,
-      size,
-      color,
-      image: images[activeImg] || product.image,
-    });
-    setMsg(`Added "${product.name}" to basket!`);
-    setTimeout(() => setMsg(""), 3000);
-  };
-
-  const handleToggleWishlist = () => {
-    if (!product) return;
-
-    if (isInWishlist) {
-      removeFromWishlist(product.id);
-      setMsg(`Removed "${product.name}" from wishlist`);
-    } else {
-      addToWishlist({ ...product, size, color, image: product.images?.[0] || product.image });
-      setMsg(`Added "${product.name}" to wishlist`);
-    }
-
-    setTimeout(() => setMsg(""), 2000);
-  };
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-
-    // Check if user is logged in
-    if (!user || !user.id) {
-      setErrorMsg("You must be logged in to post a review. Please log in and try again.");
-      setTimeout(() => setErrorMsg(""), 4000);
-      return;
-    }
-
-    if (!comment.trim() || !reviewerName.trim()) {
-      setErrorMsg("Please fill in all fields");
-      setTimeout(() => setErrorMsg(""), 3000);
-      return;
-    }
-
-    setIsSubmittingReview(true);
-    setErrorMsg("");
-
-    try {
-      const response = await fetch(
-        `http://localhost:21051/api/reviews/${product.id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": user.id, // Send user ID for authentication
-          },
-          body: JSON.stringify({
-            rating: rating,
-            comment: comment.trim(),
-            reviewer_name: reviewerName.trim(),
-            user_id: user.id,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const newReview = await response.json();
-
-        // Add new review to the list
-        setReviews([newReview.review || { ...newReview, id: Date.now() }, ...reviews]);
-
-        // Clear form
-        setComment("");
-        setReviewerName("");
-        setRating(5);
-
-        // Show success message
-        setSuccessMsg("Review posted successfully!");
-        setTimeout(() => setSuccessMsg(""), 3000);
-      } else {
-        const errorData = await response.json();
-        setErrorMsg(errorData.message || "Failed to post review");
-        setTimeout(() => setErrorMsg(""), 4000);
-      }
-    } catch (err) {
-      console.error("Error submitting review:", err);
-      setErrorMsg("Error posting review. Please try again.");
-      setTimeout(() => setErrorMsg(""), 4000);
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
-
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : 0;
-
-  return (
-    <div className="container mt-5">
-      <nav aria-label="breadcrumb">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item"><Link to="/">Home</Link></li>
-          <li className="breadcrumb-item"><Link to={`/${product.cat}s`}>{product.cat}</Link></li>
-          <li className="breadcrumb-item active">{product.name}</li>
-        </ol>
-      </nav>
-
-      <div className="row">
-        <div className="col-md-6">
-          <img
-            src={images[activeImg] || Fallback}
-            alt={product.name}
-            className="img-fluid rounded mb-3"
-            onError={(e) => { e.target.src = Fallback; }}
-          />
-          <div className="d-flex gap-2">
-            {images.map((img, i) => (
-              <img
-                key={i}
-                src={img || Fallback}
-                alt={`${product.name} ${i + 1}`}
-                className={`img-thumbnail ${i === activeImg ? 'border-primary' : ''}`}
-                style={{ width: '80px', cursor: 'pointer' }}
-                onClick={() => setActiveImg(i)}
-                onError={(e) => { e.target.src = Fallback; }}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="col-md-6">
-          <h1>{product.name}</h1>
-          <h3 style={{ color: '#fff', fontWeight: 700 }}>£{product.price.toFixed(2)}</h3>
-          <p className="mt-3">{product.desc || product.description}</p>
-
-          {product.sizes && product.sizes.length > 0 && (
-            <div className="mb-3">
-              <label className="form-label fw-bold">Size:</label>
-              <div className="btn-group d-flex flex-wrap gap-2">
-                {product.sizes.map((s) => (
-                  <button
-                    key={s}
-                    className={`btn ${size === s ? 'btn-dark' : 'btn-outline-dark'}`}
-                    onClick={() => setSize(s)}
-                    style={{ minWidth: 48 }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {product.colors && product.colors.length > 0 && (
-            <div className="mb-3">
-              <label className="form-label fw-bold">Color:</label>
-              <div className="btn-group d-flex flex-wrap gap-2">
-                {product.colors.map((c) => (
-                  <button
-                    key={c}
-                    className={`btn ${color === c ? 'btn-dark' : 'btn-outline-dark'}`}
-                    onClick={() => handleColorSelect(c)}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <button
-            className="btn btn-dark btn-lg w-100 mt-3"
-            onClick={handleAddToCart}
-          >
-            Add to Basket
-          </button>
-
-          <button
-            className={`${isInWishlist ? "btn btn-danger" : "btn btn-outline-danger"} w-100 mt-2`}
-            onClick={handleToggleWishlist}
-          >
-            {isInWishlist ? "Remove from Wishlist ❤️" : "Add to Wishlist ♡"}
-          </button>
-
-          {msg && (
-            <div className="alert alert-success mt-3" role="alert">
-              {msg}
-            </div>
-          )}
-
-          <button
-            className="btn btn-outline-secondary w-100 mt-2"
-            onClick={() => navigate(-1)}
-          >
+  if (!product) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center" style={{ backgroundColor: 'var(--color-dark)' }}>
+        <div className="text-center">
+          <p className="text-stone-400 mb-4">Product not found</p>
+          <Link to={createPageUrl('Products')} style={{ color: 'var(--color-gold)' }}>
             Back to Products
-          </button>
+          </Link>
         </div>
       </div>
+    );
+  }
 
-      {/* Reviews Section Below */}
-      <div className="mt-5 pt-5 border-top">
-        <h2 className="mb-5 fw-bold">Customer Reviews</h2>
+  const noteIcons = {
+    top: <Wind className="w-5 h-5" />,
+    heart: <Droplets className="w-5 h-5" />,
+    base: <TreePine className="w-5 h-5" />,
+  };
 
-        <div className="row">
-          {/* Reviews List */}
-          <div className={user && user.id ? "col-lg-8 mb-5" : "col-12 mb-5"}>
-            {/* Average Rating */}
-            {reviews.length > 0 && (
-              <div className="mb-4 p-4 rounded-3" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="d-flex align-items-center gap-4">
-                  <div>
-                    <div className="display-6 fw-bold mb-1" style={{ color: '#fff' }}>{averageRating}</div>
-                    <div className="fs-5 text-warning mb-2">
-                      {"★".repeat(Math.round(averageRating))}{"☆".repeat(5 - Math.round(averageRating))}
-                    </div>
-                    <small style={{ color: '#888' }}>Based on {reviews.length} review{reviews.length !== 1 ? 's' : ''}</small>
-                  </div>
+  const noteLabels = {
+    top: 'Top Notes',
+    heart: 'Heart Notes',
+    base: 'Base Notes',
+  };
+
+  return (
+    <div className="min-h-screen pt-20" style={{ backgroundColor: 'var(--color-dark)' }}>
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <Link
+          to={createPageUrl('Products')}
+          className="inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm tracking-widest">BACK TO COLLECTION</span>
+        </Link>
+      </div>
+
+      {/* Product Content */}
+      <div className="max-w-7xl mx-auto px-4 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          {/* Image */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative"
+          >
+            <div className="aspect-square rounded-3xl overflow-hidden border border-stone-800" 
+              style={{ backgroundImage: 'linear-gradient(to bottom, var(--color-dark-lighter), var(--color-dark))' }}
+            >
+              <motion.img
+                key={currentImageIndex}
+                src={product.images?.[currentImageIndex] || product.images?.[0]}
+                alt={product.name}
+                className="w-full h-full object-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+              />
+              {product.coming_soon && (
+                <div className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 rounded-full" style={{ backgroundColor: 'var(--color-gold)' }}>
+                  <Clock className="w-4 h-4 text-black" />
+                  <span className="text-sm font-medium text-black tracking-wide">COMING SOON</span>
                 </div>
-              </div>
-            )}
-
-            {/* Review List */}
-            {isLoadingReviews ? (
-              <div className="alert alert-info border-0 rounded-3">
-                <p className="mb-0">Loading reviews...</p>
-              </div>
-            ) : reviews.length > 0 ? (
-              <div>
-                <h4 className="mb-4 fw-bold">All Reviews</h4>
-                {reviews.map((review) => (
-                  <div key={review.id} className="card mb-3 rounded-3 overflow-hidden" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <div className="card-body p-4" style={{ background: 'transparent' }}>
-                      <div className="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                          <h5 className="card-title mb-2 fw-bold">{review.reviewer_name || review.name}</h5>
-                          <div className="text-warning mb-2 fs-6">
-                            {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
-                          </div>
-                        </div>
-                        <small className="text-muted">
-                          {review.created_at
-                            ? new Date(review.created_at).toLocaleDateString()
-                            : review.date || ""}
-                        </small>
-                      </div>
-                      <p className="card-text text-secondary">{review.comment}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="alert alert-info border-0 rounded-3 mb-4">
-                <p className="mb-0">No reviews yet. {user && user.id ? "Be the first to share your experience!" : "Login to be the first to share your experience!"}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Review Form - Only show if user is logged in */}
-          {user && user.id && (
-            <div className="col-lg-4">
-              <div className="card rounded-3 p-4 position-sticky" style={{ top: '120px', background: '#111', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <h5 className="mb-4 fw-bold" style={{ color: '#fff' }}>Leave a Review</h5>
-
-                <div className="mb-3 p-2 rounded-2" style={{ background: 'rgba(255,255,255,0.05)', fontSize: 13, color: '#888' }}>
-                  Logged in as: <strong style={{ color: '#fff' }}>{user.name}</strong>
-                </div>
-
-                {successMsg && (
-                  <div className="alert alert-success mb-3 border-0 rounded-2" role="alert">
-                    {successMsg}
-                  </div>
-                )}
-
-                {errorMsg && (
-                  <div className="alert alert-danger mb-3 border-0 rounded-2" role="alert">
-                    {errorMsg}
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmitReview}>
-                  <div className="mb-3">
-                    <label className="form-label fw-bold" style={{ color: '#aaa' }}>Your Name</label>
-                    <input
-                      type="text"
-                      className="form-control rounded-2"
-                      value={reviewerName}
-                      onChange={(e) => setReviewerName(e.target.value)}
-                      placeholder="Enter your name"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold mb-2" style={{ color: '#aaa' }}>Rating</label>
-                    <div className="fs-5" style={{ letterSpacing: '8px', marginBottom: '10px' }}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span
-                          key={star}
-                          onClick={() => setRating(star)}
-                          onMouseEnter={() => setHoverRating(star)}
-                          onMouseLeave={() => setHoverRating(0)}
-                          style={{
-                            cursor: 'pointer',
-                            color: star <= (hoverRating || rating) ? '#ffc107' : '#333',
-                            fontSize: '2rem',
-                            transition: 'color 0.2s',
-                            display: 'inline-block',
-                          }}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="form-label fw-bold" style={{ color: '#aaa' }}>Comment</label>
-                    <textarea
-                      className="form-control rounded-2"
-                      style={{ minHeight: '100px' }}
-                      rows="4"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      placeholder="Share your experience with this product..."
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="btn btn-dark w-100 rounded-2 fw-bold py-2"
-                    disabled={isSubmittingReview}
-                  >
-                    {isSubmittingReview ? "Posting..." : "Submit Review"}
-                  </button>
-                </form>
-              </div>
+              )}
             </div>
-          )}
+          </motion.div>
+
+          {/* Details */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="flex flex-col"
+          >
+            <p className="tracking-[0.3em] text-sm mb-2" style={{ color: 'var(--color-gold)' }}>{product.brand}</p>
+            <h1 className="text-4xl md:text-5xl font-extralight text-white tracking-wide mb-6">
+              {product.name}
+            </h1>
+            <p className="text-stone-400 leading-relaxed mb-8">
+              {product.description}
+            </p>
+
+            {/* Fragrance Notes */}
+            {product.notes && Object.keys(product.notes).length > 0 && (
+              <div className="mb-10">
+                <h3 className="text-white tracking-widest text-sm mb-6">FRAGRANCE NOTES</h3>
+                <div className="space-y-4">
+                  {['top', 'heart', 'base'].map((noteType) => (
+                    product.notes[noteType]?.length > 0 && (
+                      <div key={noteType} className="flex items-start gap-4 p-4 rounded-xl border border-stone-800" style={{ backgroundColor: 'rgba(20, 20, 20, 0.5)' }}>
+                        <div style={{ color: 'var(--color-gold)' }}>{noteIcons[noteType]}</div>
+                        <div>
+                          <p className="text-stone-500 text-xs tracking-widest mb-1">{noteLabels[noteType]}</p>
+                          <p className="text-white text-sm">{product.notes[noteType].join(', ')}</p>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Size Selection */}
+            {!product.coming_soon && product.sizes?.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-white tracking-widest text-sm mb-4">SELECT SIZE</h3>
+                <div className="flex flex-wrap gap-3">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size.ml}
+                      onClick={() => setSelectedSize(size)}
+                      className="px-6 py-4 rounded-xl border-2 transition-all"
+                      style={{
+                        borderColor: selectedSize?.ml === size.ml ? 'var(--color-gold)' : '#44403c',
+                        backgroundColor: selectedSize?.ml === size.ml ? 'rgba(201, 169, 98, 0.1)' : 'transparent',
+                        color: selectedSize?.ml === size.ml ? 'white' : '#a8a29e'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedSize?.ml !== size.ml) e.currentTarget.style.borderColor = '#57534e';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedSize?.ml !== size.ml) e.currentTarget.style.borderColor = '#44403c';
+                      }}
+                    >
+                      <span className="block text-lg font-light">{size.ml}ml</span>
+                      <span className="block text-sm mt-1" style={{ color: 'var(--color-gold)' }}>
+                        {regionData.currency}{size.price}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-4 mt-auto pt-8">
+              <Link
+                to={createPageUrl('Contact')}
+                className="flex-1 flex items-center justify-center gap-3 px-8 py-4 rounded-full transition-all text-black"
+                style={{ backgroundColor: 'var(--color-gold)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold-light)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold)'}
+              >
+                <span className="tracking-widest text-sm font-medium">CONTACT FOR PURCHASE</span>
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap gap-4 mt-4">
+              <button
+                onClick={() => toggleFavorite.mutate()}
+                className="flex items-center gap-3 px-8 py-4 rounded-full border-2 transition-all"
+                style={{
+                  borderColor: isFavorited ? 'var(--color-gold)' : '#57534e',
+                  backgroundColor: isFavorited ? 'var(--color-gold)' : 'transparent',
+                  color: isFavorited ? 'black' : 'white'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isFavorited) e.currentTarget.style.borderColor = 'var(--color-gold)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!isFavorited) e.currentTarget.style.borderColor = '#57534e';
+                }}
+              >
+                <Heart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
+                <span className="tracking-widest text-sm">
+                  {isFavorited ? 'SAVED' : 'ADD TO FAVORITES'}
+                </span>
+              </button>
+
+              <Link
+                to={createPageUrl('PerfumeFinder')}
+                className="flex items-center gap-3 px-8 py-4 rounded-full bg-stone-800 text-white hover:bg-stone-700 transition-all"
+              >
+                <Search className="w-5 h-5" />
+                <span className="tracking-widest text-sm">FIND SIMILAR</span>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
   );
 }
-
-export default ProductPage;
