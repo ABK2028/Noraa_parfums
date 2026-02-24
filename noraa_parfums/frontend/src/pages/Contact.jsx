@@ -1,355 +1,190 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api";
-
-/* Shared input/label style tokens */
-const INPUT = {
-  width: "100%",
-  display: "block",
-  background: "#1a1a1a",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: 8,
-  padding: "13px 16px",
-  color: "#fff",
-  fontSize: 14,
-  outline: "none",
-  transition: "border-color 0.18s ease",
-  boxSizing: "border-box",
-};
-
-const LABEL = {
-  display: "block",
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: "0.14em",
-  textTransform: "uppercase",
-  color: "#888",
-  marginBottom: 8,
-};
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Mail, MessageCircle, Instagram, Send } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useRegion } from '../components/RegionContext';
 
 export default function Contact() {
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
-  const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState(null);
-  const clearTimer = useRef(null);
-  const revealRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const { region } = useRegion();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [submitted, setSubmitted] = useState(false);
 
-  useEffect(() => {
-    if (!revealRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.25 }
-    );
-
-    observer.observe(revealRef.current);
-
-    return () => observer.disconnect();
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((s) => ({ ...s, [name]: value }));
-  };
-
-  const validate = () => {
-    if (!form.name.trim()) return "Name is required";
-    if (!form.email.includes("@")) return "Valid email is required";
-    if (!form.message.trim()) return "Message is required";
-    return null;
-  };
-
-  const showAlert = (a) => {
-    setAlert(a);
-    if (clearTimer.current) clearTimeout(clearTimer.current);
-    if (a?.type === "success") {
-      clearTimer.current = setTimeout(() => setAlert(null), 4000);
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const v = validate();
-    if (v) return showAlert({ type: "danger", text: v });
-
-    setLoading(true);
-    showAlert(null);
-
-    try {
-      const messageBody = form.subject.trim()
-        ? `Subject: ${form.subject.trim()}\n\n${form.message.trim()}`
-        : form.message.trim();
-
-      const res = await api.post("/api/contact", {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        message: messageBody,
-      });
-
-      showAlert({ type: "success", text: res.data?.message || "Message sent!" });
-      setForm({ name: "", email: "", subject: "", message: "" });
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        (err.code === "ECONNABORTED" ? "Request timed out" : "Server error");
-      showAlert({ type: "danger", text: msg });
-    } finally {
-      setLoading(false);
-    }
+    setSubmitted(true);
+    setTimeout(() => {
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      setSubmitted(false);
+    }, 3000);
   };
 
-  const titleSlideFadeIn = {
-    opacity: isVisible ? 1 : 0,
-    transform: isVisible ? "translateX(0)" : "translateX(-90px)",
-    transition: "opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-  };
-
-  const formSlideFadeIn = {
-    opacity: isVisible ? 1 : 0,
-    transform: isVisible ? "translateX(0)" : "translateX(-120px)",
-    transition: "opacity 0.9s ease 0.12s, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.12s",
+  const contactInfo = region === 'UK' ? {
+    instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://instagram.com/noraa_parfums' },
+    whatsapp: { label: 'WHATSAPP', value: '+44 7831 640979', href: 'https://wa.me/447831640979' },
+    email: { label: 'EMAIL', value: 'noraaparfums@gmail.com', href: 'mailto:noraaparfums@gmail.com' },
+    snapchat: { label: 'SNAPCHAT', value: 'noraa_parfums', href: null },
+    vinted: { label: 'VINTED', value: 'noraa_parfums', href: null }
+  } : {
+    instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://instagram.com/noraa_parfums' },
+    whatsapp: { label: 'WHATSAPP', value: '+91 88489 47543', href: 'https://wa.me/918848947543' },
+    email: { label: 'EMAIL', value: 'noraaparfums@gmail.com', href: 'mailto:noraaparfums@gmail.com' }
   };
 
   return (
-    <div
-      ref={revealRef}
-      style={{
-      minHeight: "80vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      padding: "60px 24px 80px",
-    }}>
-      {/* ── Large heading ── */}
-      <h1 style={{
-        fontFamily: "'Barlow Condensed', sans-serif",
-        fontSize: "clamp(56px, 11vw, 120px)",
-        fontWeight: 900,
-        textTransform: "uppercase",
-        letterSpacing: "-0.01em",
-        lineHeight: 0.92,
-        color: "#fff",
-        marginBottom: 48,
-        textAlign: "center",
-        ...titleSlideFadeIn,
-      }}>
-        Get In Touch
-      </h1>
-
-      {/* ── Card ── */}
-      <div style={{
-        width: "100%",
-        maxWidth: 620,
-        background: "#111",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 12,
-        padding: "32px 32px 28px",
-        ...formSlideFadeIn,
-      }}>
-        {/* Card header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-          <h3 style={{ color: "#fff", fontWeight: 600, margin: 0, fontSize: 18 }}>
-            General
-          </h3>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Go back"
-            style={{
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.15)",
-              color: "#fff",
-              width: 34,
-              height: 34,
-              borderRadius: 4,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              flexShrink: 0,
-            }}
-          >
-            ←
-          </button>
-        </div>
-
-        {/* Alert */}
-        {alert && (
-          <div
-            role="alert"
-            aria-live="polite"
-            style={{
-              marginBottom: 20,
-              padding: "12px 16px",
-              borderRadius: 6,
-              fontSize: 13,
-              background: alert.type === "success"
-                ? "rgba(0,200,80,0.12)"
-                : "rgba(255,60,60,0.12)",
-              border: `1px solid ${alert.type === "success" ? "rgba(0,200,80,0.25)" : "rgba(255,60,60,0.25)"}`,
-              color: alert.type === "success" ? "#4ade80" : "#f87171",
-            }}
-          >
-            {alert.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} noValidate>
-          {/* NAME + Email — two columns */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-            <div>
-              <label style={LABEL} htmlFor="contact-name">Name</label>
-              <input
-                id="contact-name"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Jane Smith"
-                style={INPUT}
-                onFocus={e => (e.target.style.borderColor = "rgba(255,255,255,0.35)")}
-                onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
-              />
-            </div>
-            <div>
-              <label style={LABEL} htmlFor="contact-email">Email</label>
-              <input
-                id="contact-email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="name@gmail.com"
-                style={INPUT}
-                onFocus={e => (e.target.style.borderColor = "rgba(255,255,255,0.35)")}
-                onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
-              />
-            </div>
-          </div>
-
-          {/* Subject */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={LABEL} htmlFor="contact-subject">Subject</label>
-            <input
-              id="contact-subject"
-              name="subject"
-              value={form.subject}
-              onChange={handleChange}
-              placeholder="Enter subject"
-              style={INPUT}
-              onFocus={e => (e.target.style.borderColor = "rgba(255,255,255,0.35)")}
-              onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
-            />
-          </div>
-
-          {/* Message */}
-          <div style={{ marginBottom: 24 }}>
-            <label style={LABEL} htmlFor="contact-message">Message</label>
-            <textarea
-              id="contact-message"
-              name="message"
-              value={form.message}
-              onChange={handleChange}
-              rows={8}
-              placeholder="Enter message"
-              style={{ ...INPUT, resize: "vertical", minHeight: 180 }}
-              onFocus={e => (e.target.style.borderColor = "rgba(255,255,255,0.35)")}
-              onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
-            />
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "14px",
-              background: loading ? "#ccc" : "#fff",
-              color: "#000",
-              border: "none",
-              borderRadius: 4,
-              fontWeight: 700,
-              fontSize: 13,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "background 0.18s ease",
-            }}
-            onMouseEnter={e => { if (!loading) e.target.style.background = "#e0e0e0"; }}
-            onMouseLeave={e => { if (!loading) e.target.style.background = "#fff"; }}
-          >
-            {loading ? "Sending…" : "Submit"}
-          </button>
-        </form>
-      </div>
-
-      {/* ── Map Section ── */}
-      <div style={{
-        width: "100%",
-        maxWidth: 620,
-        marginTop: 60,
-        ...formSlideFadeIn,
-      }}>
-        <h2 style={{
-          color: "#fff",
-          fontWeight: 600,
-          fontSize: 18,
-          marginBottom: 20,
-          textAlign: "center",
-        }}>
-          Our Location
-        </h2>
-        <div 
-          onClick={() => {
-            window.open(
-              "https://www.google.com/maps/dir/?api=1&destination=134a+Aston+Road,+Birmingham,+UK&travelmode=driving",
-              "_blank"
-            );
-          }}
-          style={{
-            background: "#111",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 12,
-            overflow: "hidden",
-            aspectRatio: "16 / 9",
-            cursor: "pointer",
-            transition: "border-color 0.18s ease",
-          }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-        >
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2428.6848396569256!2d-1.8945!3d52.5077!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48709b4b4b7b7b7b%3A0x7b7b7b7b7b7b7b7b!2s134a%20Aston%20Rd%2C%20Birmingham%20B6%204BY!5e0!3m2!1sen!2suk!4v1234567890"
-            width="100%"
-            height="100%"
-            style={{
-              border: "none",
-              borderRadius: 12,
-              pointerEvents: "none",
-            }}
-            allowFullScreen=""
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Our Location - 134a Aston Road, Birmingham, UK"
+    <div className="min-h-screen pt-20" style={{ backgroundColor: 'var(--color-dark)' }}>
+      {/* Hero */}
+      <section className="relative py-24 px-4">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1920"
+            alt="Contact"
+            className="w-full h-full object-cover opacity-20"
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black" />
         </div>
-        <p style={{
-          color: "#888",
-          fontSize: 13,
-          marginTop: 16,
-          textAlign: "center",
-        }}>
-          134a Aston Road, Birmingham, UK
-        </p>
-      </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <p className="tracking-[0.3em] text-sm mb-4" style={{ color: 'var(--color-gold)' }}>GET IN TOUCH</p>
+            <h1 className="text-4xl md:text-6xl font-extralight text-white tracking-wide">
+              Contact Us
+            </h1>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Contact Content */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12">
+            {/* Contact Information */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <h2 className="text-3xl font-light text-white mb-6">Let's Connect</h2>
+              <p className="text-stone-400 mb-8">
+                Our team is dedicated to providing you with an exceptional experience. Reach out to us through any of the channels below, and we'll respond as soon as possible.
+              </p>
+
+              <div className="space-y-6">
+                {Object.entries(contactInfo).map(([key, item]) => (
+                  <div key={key} className="flex items-start gap-4">
+                    <div className="p-3 rounded-lg" style={{ backgroundColor: 'rgba(201, 169, 98, 0.1)' }}>
+                      {key === 'instagram' && <Instagram className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
+                      {key === 'whatsapp' && <MessageCircle className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
+                      {key === 'email' && <Mail className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
+                      {(key === 'snapchat' || key === 'vinted') && <MessageCircle className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
+                    </div>
+                    <div>
+                      <p className="text-stone-500 text-xs tracking-widest mb-1">{item.label}</p>
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white hover:text-stone-300 transition-colors"
+                        >
+                          {item.value}
+                        </a>
+                      ) : (
+                        <p className="text-white">{item.value}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Contact Form */}
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-white text-xs tracking-widest mb-2 block">NAME</label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className="bg-stone-900 border-stone-700 text-white focus:border-amber-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-white text-xs tracking-widest mb-2 block">EMAIL</label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                      className="bg-stone-900 border-stone-700 text-white focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-white text-xs tracking-widest mb-2 block">SUBJECT</label>
+                  <Input
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    required
+                    className="bg-stone-900 border-stone-700 text-white focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-white text-xs tracking-widest mb-2 block">MESSAGE</label>
+                  <Textarea
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    required
+                    rows={6}
+                    className="bg-stone-900 border-stone-700 text-white focus:border-amber-400"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full text-black"
+                  style={{ backgroundColor: 'var(--color-gold)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold-light)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold)'}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Message
+                </Button>
+
+                {submitted && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center"
+                    style={{ color: 'var(--color-gold)' }}
+                  >
+                    Thank you! We'll be in touch soon.
+                  </motion.p>
+                )}
+              </form>
+            </motion.div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
