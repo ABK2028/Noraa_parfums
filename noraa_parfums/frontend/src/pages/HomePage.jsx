@@ -1,205 +1,206 @@
-import { useEffect, useRef, useState } from "react";
-import { NavLink } from "react-router-dom";
-import HeroCarouselNew from "../components/HeroCarouselNew";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '../utils';
+import { motion } from 'framer-motion';
+import { ArrowRight, Sparkles, Search } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { useRegion } from '../components/RegionContext';
+import ProductCard from '../components/ProductCard';
 
-const categories = [
-  { label: "Mens",    to: "/mens",    img: "/images/Men1.jpg" },
-  { label: "Womens",  to: "/womens",  img: "/images/Woman1.jpg" },
-  { label: "Kids",    to: "/kids",    img: "/images/Kids1.jpg" },
-];
+export default function Home() {
+  const { region } = useRegion();
 
-const galleryImages = [
-  { src: "/images/Men1.jpg",    alt: "Men's Fit" },
-  { src: "/images/Woman1.jpg",  alt: "Women's Fit" },
-  { src: "/images/Kids1.jpg",   alt: "Kids' Fit" },
-  { src: "/images/Family1.jpg", alt: "Family Fit" },
-  { src: "/images/Men2.jpg",    alt: "Men's Fit 2" },
-  { src: "/images/Woman2.jpg",  alt: "Women's Fit 2" },
-  { src: "/images/Kids2.jpg",   alt: "Kids' Fit 2" },
-  { src: "/images/Family2.jpg", alt: "Family Fit 2" },
-];
+  const { data: products = [] } = useQuery({
+    queryKey: ['products', region],
+    queryFn: () => base44.entities.Product.filter({ region }),
+  });
 
-const s3 = {
-  card: { position: "relative", overflow: "hidden", height: 440, cursor: "pointer", transition: "flex 0.5s ease" },
-  img: { width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "filter 0.4s ease" },
-  label: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", padding: 20, gap: 8 },
-  name: { fontFamily: "'Barlow Condensed',sans-serif", fontSize: "clamp(20px,3vw,32px)", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#fff", transition: "all 0.3s ease" },
-  sub: { fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" },
-};
-
-export function HomePage() {
-  const welcomeRef = useRef(null);
-  const [hoveredCategory, setHoveredCategory] = useState(null);
-  const [isWelcomeVisible, setIsWelcomeVisible] = useState(false);
-
-  useEffect(() => {
-    if (!welcomeRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsWelcomeVisible(entry.isIntersecting);
-      },
-      { threshold: 0.35 }
-    );
-
-    observer.observe(welcomeRef.current);
-
-    return () => observer.disconnect();
-  }, []);
-
-  const fromLeft = {
-    opacity: isWelcomeVisible ? 1 : 0,
-    transform: isWelcomeVisible ? "translateX(0)" : "translateX(-36px)",
-    transition: "opacity 0.7s ease, transform 0.7s ease",
-  };
-
-  const fromRight = {
-    opacity: isWelcomeVisible ? 1 : 0,
-    transform: isWelcomeVisible ? "translateX(0)" : "translateX(36px)",
-    transition: "opacity 0.7s ease, transform 0.7s ease",
-  };
-
-  const bodyReveal = {
-    opacity: isWelcomeVisible ? 1 : 0,
-    transform: isWelcomeVisible ? "translateY(0)" : "translateY(18px)",
-    transition: "opacity 0.75s ease 0.2s, transform 0.75s ease 0.2s",
-  };
+  const featuredProducts = products.filter(p => !p.coming_soon).slice(0, 3);
 
   return (
-    <>
-      {/* ── Hero ── */}
-      <HeroCarouselNew />
+    <div style={{ backgroundColor: 'var(--color-dark)' }}>
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=1920"
+            alt="Luxury perfume"
+            className="w-full h-full object-cover opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80" />
+        </div>
 
-      {/* ── Category strip ── */}
-      <section style={{ background: "#000", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", gap: 6 }}>
-          {categories.map((cat, i) => (
-            <NavLink
-              key={cat.to}
-              to={cat.to}
-              style={{
-                ...s3.card,
-                flex: hoveredCategory === i ? 2.2 : 1,
-                display: "block",
-              }}
-              onMouseEnter={() => setHoveredCategory(i)}
-              onMouseLeave={() => setHoveredCategory(null)}
-            >
-              <img
-                src={cat.img}
-                alt={cat.label}
-                style={{
-                  ...s3.img,
-                  filter: hoveredCategory === i ? "brightness(0.75)" : "brightness(0.45)",
+        {/* Content */}
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <Sparkles className="w-8 h-8 mx-auto mb-6" style={{ color: 'var(--color-gold)' }} />
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-[0.2em] text-white mb-4">
+              NORAA
+            </h1>
+            <p className="tracking-[0.5em] text-sm md:text-base mb-8" style={{ color: 'var(--color-gold)' }}>
+              PARFUMS
+            </p>
+            <p className="text-stone-300 text-lg md:text-xl font-light max-w-2xl mx-auto mb-12 leading-relaxed">
+              Discover the essence of luxury. Premium fragrances crafted for those who 
+              appreciate the finer things in life.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to={createPageUrl('Products')}
+                className="inline-flex items-center gap-3 px-8 py-4 text-black font-medium tracking-widest text-sm transition-colors"
+                style={{ backgroundColor: 'var(--color-gold)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold-light)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold)'}
+              >
+                EXPLORE COLLECTION
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to={createPageUrl('PerfumeFinder')}
+                className="inline-flex items-center gap-3 px-8 py-4 border text-white font-medium tracking-widest text-sm transition-colors"
+                style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-gold)';
+                  e.currentTarget.style.color = 'var(--color-gold)';
                 }}
-              />
-              <div style={s3.label}>
-                <span
-                  style={{
-                    ...s3.name,
-                    writingMode: hoveredCategory === i ? "horizontal-tb" : "vertical-rl",
-                    transform: hoveredCategory === i ? "none" : "rotate(180deg)",
-                  }}
-                >
-                  {cat.label}
-                </span>
-                {hoveredCategory === i && <span style={s3.sub}>Shop Now →</span>}
-              </div>
-            </NavLink>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Welcome / Brand statement ── */}
-      <section
-        ref={welcomeRef}
-        style={{
-        background: "#000",
-        padding: "100px 24px",
-        display: "flex",
-        gap: 80,
-        maxWidth: 1200,
-        margin: "0 auto",
-        alignItems: "flex-start",
-      }}>
-        <div style={{ flex: "0 0 auto" }}>
-          <h1 style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: "clamp(64px, 10vw, 120px)",
-            fontWeight: 900,
-            lineHeight: 0.9,
-            letterSpacing: "-0.02em",
-            textTransform: "uppercase",
-            color: "#fff",
-            margin: 0,
-          }}>
-            <span style={{ display: "block", ...fromLeft }}>Wear</span>
-            <span style={{ display: "block", color: "rgba(255,255,255,0.25)", ...fromRight, transitionDelay: "0.12s" }}>Your</span>
-            <span style={{ display: "block", ...fromLeft, transitionDelay: "0.22s" }}>Story.</span>
-          </h1>
-        </div>
-        <div style={{ paddingTop: 16, maxWidth: 480, ...bodyReveal }}>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.8, marginBottom: 20 }}>
-            OSAI is one of the leading companies in the fashion industry.
-            Pure fashion created from the finest Japanese fibers — hand-woven
-            and tailor-made for every body type.
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.8, marginBottom: 36 }}>
-            From kids to adults, daily wear to timeless pieces, we have it all.
-            You will always find something for everyone with us.
-          </p>
-          <NavLink
-            to="/about"
-            style={{
-              display: "inline-block",
-              padding: "12px 32px",
-              border: "1px solid rgba(255,255,255,0.3)",
-              color: "#fff",
-              fontSize: 11,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              textDecoration: "none",
-              transition: "background 0.2s, border-color 0.2s",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
-            }}
-          >
-            Our Story →
-          </NavLink>
-        </div>
-      </section>
-
-      {/* ── Editorial Gallery ── */}
-      <section className="osai-gallery-section">
-        <div className="osai-gallery-header">
-          <h2>Wear Your Style</h2>
-          <NavLink
-            to="/mens"
-            style={{
-              fontSize: 11,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.4)",
-              transition: "color 0.15s",
-            }}
-          >
-            View All →
-          </NavLink>
-        </div>
-        <div className="osai-gallery-grid">
-          {galleryImages.map((img, i) => (
-            <div className="osai-gallery-grid-item" key={i}>
-              <img src={img.src} alt={img.alt} loading="lazy" />
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.color = 'white';
+                }}
+              >
+                <Search className="w-4 h-4" />
+                FIND YOUR SCENT
+              </Link>
             </div>
-          ))}
+          </motion.div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <div className="w-6 h-10 border border-stone-500 rounded-full flex justify-center">
+            <motion.div
+              animate={{ y: [0, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="w-1.5 h-1.5 rounded-full mt-2"
+              style={{ backgroundColor: 'var(--color-gold)' }}
+            />
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-24 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="text-center mb-16"
+          >
+            <p className="tracking-[0.3em] text-sm mb-4" style={{ color: 'var(--color-gold)' }}>CURATED SELECTION</p>
+            <h2 className="text-4xl md:text-5xl font-extralight text-white tracking-wide">
+              Featured Fragrances
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              to={createPageUrl('Products')}
+              className="inline-flex items-center gap-2 tracking-widest text-sm transition-colors"
+              style={{ color: 'var(--color-gold)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-gold)'}
+            >
+              VIEW ALL PRODUCTS
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
-    </>
+
+      {/* Brand Promise */}
+      <section className="py-24 px-4" style={{ backgroundColor: 'var(--color-dark-lighter)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            {[
+              { title: 'AUTHENTIC', desc: 'Premium quality fragrances from renowned houses' },
+              { title: 'ACCESSIBLE', desc: 'Luxury scents at competitive prices' },
+              { title: 'CURATED', desc: 'Hand-selected collection for discerning tastes' },
+            ].map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
+                className="p-8"
+              >
+                <div className="w-16 h-px mx-auto mb-6" style={{ backgroundColor: 'var(--color-gold)' }} />
+                <h3 className="text-white tracking-[0.3em] text-lg mb-4">{item.title}</h3>
+                <p className="text-stone-400 text-sm leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative py-32 px-4">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=1920"
+            alt="Perfume collection"
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black" />
+        </div>
+        
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <h2 className="text-3xl md:text-4xl font-extralight text-white tracking-wide mb-6">
+              Not sure which fragrance suits you?
+            </h2>
+            <p className="text-stone-400 mb-8">
+              Let our AI perfume consultant help you discover your perfect scent
+            </p>
+            <Link
+              to={createPageUrl('PerfumeFinder')}
+              className="inline-flex items-center gap-3 px-8 py-4 text-black font-medium tracking-widest text-sm transition-colors"
+              style={{ backgroundColor: 'var(--color-gold)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold-light)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold)'}
+            >
+              <Search className="w-4 h-4" />
+              FIND YOUR PERFECT MATCH
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+    </div>
   );
 }
