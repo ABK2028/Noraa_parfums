@@ -1,6 +1,6 @@
-# OSAI Fashion Frontend
+# Noraa Parfums Frontend
 
-Frontend for Team 51 OSAI Fashion.
+Frontend for Noraa Parfums - Premium fragrance e-commerce.
 
 ## Scripts
 
