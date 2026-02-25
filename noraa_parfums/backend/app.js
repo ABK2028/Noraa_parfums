@@ -8,8 +8,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://cs2team51.cs2410-web01pvm.aston.ac.uk",
-    "http://cs2team51.cs2410-web01pvm.aston.ac.uk"
+    "https://noraa-parfums.netlify.app"
   ],
   credentials: true
 }));
@@ -71,8 +70,7 @@ app.use((req, res) => {
 });
 
 // === START SERVER ===
-const PORT = process.env.PORT || 21051;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🌐 Live URL: https://cs2team51.cs2410-web01pvm.aston.ac.uk:${PORT}`);
 });

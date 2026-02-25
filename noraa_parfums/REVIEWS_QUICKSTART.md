@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 ```bash
 cd backend
 npm start
-# Server runs on http://localhost:21051
+# Server runs on http://localhost:5000
 ```
 
 ### Step 3: Frontend Already Running
@@ -76,7 +76,7 @@ The frontend dev server is already running on http://localhost:5174
 ## Testing Checklist
 
 - [ ] Database table created successfully
-- [ ] Backend server running on port 21051
+- [ ] Backend server running on port 5000
 - [ ] Frontend dev server running on port 5174
 - [ ] Can view products without login
 - [ ] Review form shows "Login Required" when not logged in
@@ -116,7 +116,7 @@ The frontend dev server is already running on http://localhost:5174
 ## Common Issues & Solutions
 
 ### Issue: "Failed to post review"
-**Solution:** Make sure backend is running on port 21051
+**Solution:** Make sure backend is running on port 5000
 
 ### Issue: "You must be logged in to review"
 **Solution:** Login first, then go back to product page

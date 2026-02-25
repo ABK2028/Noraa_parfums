@@ -205,7 +205,7 @@ frontend/
 
 ### 1. Create a User Account
 ```bash
-POST http://localhost:21051/api/users/register
+POST http://localhost:5000/api/users/register
 {
   "name": "Test User",
   "email": "test@example.com",
@@ -215,7 +215,7 @@ POST http://localhost:21051/api/users/register
 
 ### 2. Login to Get User ID
 ```bash
-POST http://localhost:21051/api/users/login
+POST http://localhost:5000/api/users/login
 {
   "email": "test@example.com",
   "password": "password123"
@@ -225,7 +225,7 @@ POST http://localhost:21051/api/users/login
 
 ### 3. Post a Review
 ```bash
-POST http://localhost:21051/api/reviews/m-001
+POST http://localhost:5000/api/reviews/m-001
 Headers:
   x-user-id: 1
 
@@ -239,7 +239,7 @@ Headers:
 
 ### 4. View Reviews
 ```bash
-GET http://localhost:21051/api/reviews/m-001
+GET http://localhost:5000/api/reviews/m-001
 ```
 
 ---
@@ -253,7 +253,7 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
 DB_PASS=your_password
-DB_NAME=team51_shop
+DB_NAME=noraa_parfums_db
 ```
 
 ---
