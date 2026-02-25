@@ -1,0 +1,98 @@
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '../utils';
+import { Heart, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useRegion } from './RegionContext';
+import { getFavorites, toggleFavorite } from '../lib/perfumeStore';
+
+export default function ProductCard({ product, index = 0 }) {
+  const { regionData } = useRegion();
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const favorites = useMemo(() => getFavorites(), [refreshKey]);
+  const isFavorited = favorites.some((f) => f.product_id === product.id);
+
+  const handleToggleFavorite = () => {
+    toggleFavorite(product.id);
+    setRefreshKey((prev) => prev + 1);
+  };
+
+  const minPrice = product.sizes?.[0]?.price;
+  const maxPrice = product.sizes?.[product.sizes.length - 1]?.price;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
+      className="group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div
+        className="relative rounded-2xl overflow-hidden border transition-all duration-500"
+        style={{
+          backgroundImage: 'linear-gradient(to bottom, var(--color-dark-lighter), var(--color-dark))',
+          borderColor: 'rgba(120, 113, 108, 0.5)',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(201, 169, 98, 0.3)')}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(120, 113, 108, 0.5)')}
+      >
+        <Link to={`${createPageUrl('ProductDetail')}/${product.id}`}>
+          <div className="relative aspect-square overflow-hidden" onMouseEnter={() => setImageIndex(1)} onMouseLeave={() => setImageIndex(0)}>
+            <motion.img
+              src={product.images?.[imageIndex] || product.images?.[0]}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              animate={{ scale: isHovered ? 1.05 : 1 }}
+              transition={{ duration: 0.6 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+            {product.coming_soon && (
+              <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ backgroundColor: 'var(--color-gold)' }}>
+                <Clock className="w-3 h-3 text-black" />
+                <span className="text-xs font-medium text-black tracking-wide">COMING SOON</span>
+              </div>
+            )}
+          </div>
+        </Link>
+
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            handleToggleFavorite();
+          }}
+          className="absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-sm transition-all duration-300"
+          style={{
+            backgroundColor: isFavorited ? 'var(--color-gold)' : 'rgba(0, 0, 0, 0.4)',
+            color: isFavorited ? 'black' : 'white',
+          }}
+        >
+          <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
+        </button>
+
+        <div className="p-5">
+          <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(201, 169, 98, 0.7)' }}>{product.brand}</p>
+          <h3 className="text-white text-lg font-light mb-3">{product.name}</h3>
+
+          {!product.coming_soon && minPrice && (
+            <div className="flex items-baseline gap-2">
+              <span className="text-white text-xl font-light">
+                {regionData.currency}{minPrice}
+              </span>
+              {maxPrice !== minPrice && (
+                <span className="text-stone-500 text-sm">
+                  - {regionData.currency}{maxPrice}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}

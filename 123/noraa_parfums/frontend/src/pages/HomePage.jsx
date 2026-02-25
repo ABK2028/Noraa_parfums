@@ -47,7 +47,7 @@ export default function Home() {
             <p className="tracking-[0.5em] text-sm md:text-base mb-8" style={{ color: 'var(--color-gold)' }}>
               PARFUMS
             </p>
-            <p className="text-stone-300 text-lg md:text-3xl font-light max-w-2xl mx-auto mb-12 leading-relaxed">
+            <p className="text-stone-300 text-lg md:text-xl font-light max-w-2xl mx-auto mb-12 leading-relaxed">
               Discover the essence of luxury. Premium fragrances crafted for those who 
               appreciate the finer things in life.
             </p>
@@ -101,72 +101,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Brand Promise */}
-      <section className="py-20 px-4" style={{ backgroundColor: 'var(--color-dark-lighter)' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            {[
-              { title: 'AUTHENTIC', desc: 'Premium quality fragrances from renowned houses' },
-              { title: 'ACCESSIBLE', desc: 'Luxury scents at competitive prices' },
-              { title: 'CURATED', desc: 'Hand-selected collection for discerning tastes' },
-            ].map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
-                className="p-8"
-              >
-                <div className="w-16 h-px mx-auto mb-6" style={{ backgroundColor: 'var(--color-gold)' }} />
-                <h3 className="text-white tracking-[0.3em] text-lg mb-4">{item.title}</h3>
-                <p className="text-stone-400 text-sm leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative py-28 px-4">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=1920"
-            alt="Perfume collection"
-            className="w-full h-full object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-black/90" />
-        </div>
-        
-        <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="px-8 py-12"
-            style={{ backgroundColor: 'rgba(10, 10, 10, 0.75)' }}
-          >
-            <h2 className="text-3xl md:text-5xl font-extralight text-white tracking-wide mb-6">
-              Not sure which fragrance suits you?
-            </h2>
-            <p className="text-stone-400 mb-8">
-              Let our AI perfume consultant help you discover your perfect scent
-            </p>
-            <Link
-              to={createPageUrl('PerfumeFinder')}
-              className="inline-flex items-center gap-3 px-8 py-4 text-black font-medium tracking-widest text-sm transition-colors"
-              style={{ backgroundColor: 'var(--color-gold)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold-light)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold)'}
-            >
-              <Search className="w-4 h-4" />
-              FIND YOUR PERFECT MATCH
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Featured Products */}
       <section className="py-24 px-4">
         <div className="max-w-7xl mx-auto">
@@ -201,6 +135,70 @@ export default function Home() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Brand Promise */}
+      <section className="py-24 px-4" style={{ backgroundColor: 'var(--color-dark-lighter)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            {[
+              { title: 'AUTHENTIC', desc: 'Premium quality fragrances from renowned houses' },
+              { title: 'ACCESSIBLE', desc: 'Luxury scents at competitive prices' },
+              { title: 'CURATED', desc: 'Hand-selected collection for discerning tastes' },
+            ].map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
+                className="p-8"
+              >
+                <div className="w-16 h-px mx-auto mb-6" style={{ backgroundColor: 'var(--color-gold)' }} />
+                <h3 className="text-white tracking-[0.3em] text-lg mb-4">{item.title}</h3>
+                <p className="text-stone-400 text-sm leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative py-32 px-4">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=1920"
+            alt="Perfume collection"
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black" />
+        </div>
+        
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <h2 className="text-3xl md:text-4xl font-extralight text-white tracking-wide mb-6">
+              Not sure which fragrance suits you?
+            </h2>
+            <p className="text-stone-400 mb-8">
+              Let our AI perfume consultant help you discover your perfect scent
+            </p>
+            <Link
+              to={createPageUrl('PerfumeFinder')}
+              className="inline-flex items-center gap-3 px-8 py-4 text-black font-medium tracking-widest text-sm transition-colors"
+              style={{ backgroundColor: 'var(--color-gold)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold-light)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold)'}
+            >
+              <Search className="w-4 h-4" />
+              FIND YOUR PERFECT MATCH
+            </Link>
+          </motion.div>
         </div>
       </section>
     </div>
