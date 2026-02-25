@@ -41,10 +41,16 @@ export default function Home() {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <Sparkles className="w-8 h-8 mx-auto mb-6" style={{ color: 'var(--color-gold)' }} />
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-[0.2em] text-white mb-4">
+            <h1
+              className="font-extralight tracking-[0.2em] text-white mb-4"
+              style={{ fontSize: 'clamp(3rem, 6vw, 6rem)', fontFamily: "'Cinzel', 'Barlow Condensed', serif" }}
+            >
               NORAA
             </h1>
-            <p className="tracking-[0.5em] text-sm md:text-base mb-8" style={{ color: 'var(--color-gold)' }}>
+            <p
+              className="tracking-[0.5em] text-sm md:text-base mb-8"
+              style={{ color: 'var(--color-gold)', fontFamily: "'Cinzel', 'Barlow Condensed', serif" }}
+            >
               PARFUMS
             </p>
             <p className="text-stone-300 text-lg md:text-3xl font-light max-w-2xl mx-auto mb-12 leading-relaxed">
@@ -99,6 +105,43 @@ export default function Home() {
             />
           </div>
         </motion.div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-24 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="text-center mb-16"
+          >
+            <p className="tracking-[0.3em] text-sm mb-4" style={{ color: 'var(--color-gold)' }}>CURATED SELECTION</p>
+            <h2 className="text-4xl md:text-5xl font-extralight text-white tracking-wide">
+              Featured Fragrances
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              to={createPageUrl('Products')}
+              className="inline-flex items-center gap-2 tracking-widest text-sm transition-colors"
+              style={{ color: 'var(--color-gold)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-gold)'}
+            >
+              VIEW ALL PRODUCTS
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* Brand Promise */}
@@ -167,42 +210,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="text-center mb-16"
-          >
-            <p className="tracking-[0.3em] text-sm mb-4" style={{ color: 'var(--color-gold)' }}>CURATED SELECTION</p>
-            <h2 className="text-4xl md:text-5xl font-extralight text-white tracking-wide">
-              Featured Fragrances
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Link
-              to={createPageUrl('Products')}
-              className="inline-flex items-center gap-2 tracking-widest text-sm transition-colors"
-              style={{ color: 'var(--color-gold)' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-gold)'}
-            >
-              VIEW ALL PRODUCTS
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

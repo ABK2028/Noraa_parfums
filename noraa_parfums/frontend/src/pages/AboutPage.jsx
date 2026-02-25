@@ -52,8 +52,8 @@ export default function About() {
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
               <img
-                src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=800"
-                alt="Luxury perfumes"
+                src="/images/Dior%20Sauvage%20Elixir%20(2).jpeg"
+                alt="Dior Sauvage Elixir bottle"
                 className="rounded-2xl w-full"
               />
             </motion.div>
@@ -65,7 +65,8 @@ export default function About() {
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
               <h2 className="text-3xl md:text-4xl font-light text-white mb-6">
-                A Legacy of Excellence
+                A Legacy of{' '}
+                <span className="italic" style={{ color: 'var(--color-gold)' }}>Excellence</span>
               </h2>
               <p className="text-stone-400 mb-6">
                 Born from a deep reverence for the ancient art of perfumery, Noraa Parfums represents the pinnacle of olfactory craftsmanship. Each fragrance is a masterpiece, meticulously composed to evoke emotion and create lasting memories.
@@ -90,7 +91,7 @@ export default function About() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="order-2 md:order-1"
+              className="order-1"
             >
               <p className="tracking-[0.3em] text-xs mb-4" style={{ color: 'var(--color-gold)' }}>OUR PHILOSOPHY</p>
               <h2 className="text-3xl md:text-4xl font-light text-white mb-4">
@@ -120,11 +121,11 @@ export default function About() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="order-1 md:order-2"
+              className="order-2"
             >
               <img
-                src="https://images.unsplash.com/photo-1588405748880-12d1d2a59d75?w=800"
-                alt="Perfume crafting"
+                src="/images/Bleu%20de%20Chanel%20(1).jpeg"
+                alt="Perfume bottle"
                 className="rounded-2xl w-full"
               />
             </motion.div>
@@ -168,7 +169,9 @@ export default function About() {
                 transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
                 className="text-center"
               >
-                <h3 className="text-xl font-light text-white mb-4">{item.title}</h3>
+                <h3 className="text-xl font-light text-white mb-4">
+                  <span className="italic" style={{ color: 'var(--color-gold)' }}>{item.title}</span>
+                </h3>
                 <p className="text-stone-400 leading-relaxed">{item.description}</p>
               </motion.div>
             ))}
