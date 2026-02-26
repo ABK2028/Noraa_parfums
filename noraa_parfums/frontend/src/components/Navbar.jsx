@@ -7,14 +7,7 @@ import RegionSelector from './RegionSelector';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -28,16 +21,17 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-      scrolled ? 'backdrop-blur-md shadow-lg' : 'bg-transparent'
-    }`} style={{ backgroundColor: scrolled ? 'rgba(10, 10, 10, 0.95)' : 'transparent' }}>
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500 backdrop-blur-md shadow-lg"
+      style={{ backgroundColor: 'rgba(10, 10, 10, 0.95)' }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          <Link to={createPageUrl('Home')} className="flex-shrink-0">
+        <div className="flex items-center justify-between h-24">
+          <Link to={createPageUrl('Home')} className="flex-shrink-0 inline-flex items-center px-2">
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/697d3ca8cdcd480e7b1498cf/86b7ebcf2_Logo.jpg"
               alt="Noraa Parfums"
-              className="h-12 w-auto"
+              className="h-20 w-auto object-contain"
             />
           </Link>
 

@@ -26,13 +26,13 @@ export default function Contact() {
   };
 
   const contactInfo = region === 'UK' ? {
-    instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://instagram.com/noraa_parfums' },
-    whatsapp: { label: 'WHATSAPP', value: '+44 7831 640979', href: 'https://wa.me/447831640979' },
+    instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://www.instagram.com/noraa_parfums/' },
+    whatsapp: { label: 'WHATSAPP', value: '+44 7831 640979', href: 'https://api.whatsapp.com/send?phone=447831640979' },
     email: { label: 'EMAIL', value: 'noraaparfums@gmail.com', href: 'mailto:noraaparfums@gmail.com' },
-    snapchat: { label: 'SNAPCHAT', value: 'noraa_parfums', href: null },
-    vinted: { label: 'VINTED', value: 'noraa_parfums', href: null }
+    snapchat: { label: 'SNAPCHAT', value: 'noraa_parfums', href: 'https://www.snapchat.com/add/noraa_parfums' },
+    vinted: { label: 'VINTED', value: 'noraa_parfums', href: 'https://www.vinted.co.uk/member/132207890' }
   } : {
-    instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://instagram.com/noraa_parfums' },
+    instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://www.instagram.com/noraa_parfums/' },
     whatsapp: { label: 'WHATSAPP', value: '+91 88489 47543', href: 'https://wa.me/918848947543' },
     email: { label: 'EMAIL', value: 'noraaparfums@gmail.com', href: 'mailto:noraaparfums@gmail.com' }
   };
@@ -86,7 +86,26 @@ export default function Contact() {
                       {key === 'instagram' && <Instagram className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
                       {key === 'whatsapp' && <MessageCircle className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
                       {key === 'email' && <Mail className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
-                      {(key === 'snapchat' || key === 'vinted') && <MessageCircle className="w-5 h-5" style={{ color: 'var(--color-gold)' }} />}
+                      {key === 'snapchat' && (
+                        <span className="w-5 h-5 flex items-center justify-center overflow-hidden">
+                          <img
+                            src="/images/Snapchat.png"
+                            alt="Snapchat"
+                            className="w-full h-full object-cover block"
+                            style={{ transform: 'scale(1.7)', transformOrigin: 'center' }}
+                          />
+                        </span>
+                      )}
+                      {key === 'vinted' && (
+                        <span className="w-5 h-5 flex items-center justify-center overflow-hidden">
+                          <img
+                            src="/images/Vinted.png"
+                            alt="Vinted"
+                            className="w-full h-full object-cover block"
+                            style={{ transform: 'scale(1.7)', transformOrigin: 'center' }}
+                          />
+                        </span>
+                      )}
                     </div>
                     <div>
                       <p className="text-stone-500 text-xs tracking-widest mb-1">{item.label}</p>

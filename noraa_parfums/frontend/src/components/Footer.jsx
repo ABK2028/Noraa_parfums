@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import { Instagram, Facebook, Twitter } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -19,7 +18,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div>
+          <div className="md:col-start-4">
             <h3 className="text-white text-sm tracking-widest mb-6">EXPLORE</h3>
             <div className="space-y-3">
               {[
@@ -36,21 +35,6 @@ export default function Footer() {
                   {link.name}
                 </Link>
               ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-white text-sm tracking-widest mb-6">FOLLOW US</h3>
-            <div className="flex gap-4">
-              <a href="#" className="p-2 border border-stone-700 rounded-full text-white hover:text-white transition-colors">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="p-2 border border-stone-700 rounded-full text-white hover:text-white transition-colors">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="p-2 border border-stone-700 rounded-full text-white hover:text-white transition-colors">
-                <Twitter className="w-5 h-5" />
-              </a>
             </div>
           </div>
         </div>

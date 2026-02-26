@@ -28,12 +28,12 @@ export default function ProductCard({ product, index = 0 }) {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
-      className="group"
+      className="group w-full max-w-sm mx-auto h-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className="relative rounded-2xl overflow-hidden border transition-all duration-500"
+        className="relative rounded-2xl overflow-hidden border transition-all duration-500 h-full flex flex-col"
         style={{
           backgroundImage: 'linear-gradient(to bottom, var(--color-dark-lighter), var(--color-dark))',
           borderColor: 'rgba(120, 113, 108, 0.5)',
@@ -75,22 +75,24 @@ export default function ProductCard({ product, index = 0 }) {
           <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
         </button>
 
-        <div className="p-5">
+        <div className="p-5 flex-1 flex flex-col">
           <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(201, 169, 98, 0.7)' }}>{product.brand}</p>
-          <h3 className="text-white text-lg font-light mb-3">{product.name}</h3>
+          <h3 className="text-white text-lg font-light mb-3 min-h-[3.5rem] line-clamp-2">{product.name}</h3>
 
-          {!product.coming_soon && minPrice && (
-            <div className="flex items-baseline gap-2">
-              <span className="text-white text-xl font-light">
-                {regionData.currency}{minPrice}
-              </span>
-              {maxPrice !== minPrice && (
-                <span className="text-stone-500 text-sm">
-                  - {regionData.currency}{maxPrice}
+          <div className="min-h-8 mt-auto flex items-baseline gap-2">
+            {!product.coming_soon && minPrice && (
+              <>
+                <span className="text-white text-xl font-light">
+                  {regionData.currency}{minPrice}
                 </span>
-              )}
-            </div>
-          )}
+                {maxPrice !== minPrice && (
+                  <span className="text-stone-500 text-sm">
+                    - {regionData.currency}{maxPrice}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
