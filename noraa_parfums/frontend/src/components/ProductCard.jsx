@@ -42,16 +42,32 @@ export default function ProductCard({ product, index = 0 }) {
         onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(120, 113, 108, 0.5)')}
       >
         <Link to={`${createPageUrl('ProductDetail')}/${product.id}`}>
-          <div className="relative aspect-square overflow-hidden" onMouseEnter={() => setImageIndex(1)} onMouseLeave={() => setImageIndex(0)}>
-            <motion.img
+          <div
+            className="relative aspect-square overflow-hidden rounded-2xl"
+            onMouseEnter={() => setImageIndex(1)}
+            onMouseLeave={() => setImageIndex(0)}
+          >
+            {/* Product Image */}
+            <img
               src={product.images?.[imageIndex] || product.images?.[0]}
               alt={product.name}
-              className="w-full h-full object-cover"
-              animate={{ scale: isHovered ? 1.05 : 1 }}
-              transition={{ duration: 0.6 }}
+              className={`w-full h-full object-cover transition duration-500 ${product.sold_out ? 'blur-sm scale-105' : ''}`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
+            {/* Dark Gradient Overlay only for sold out or coming soon */}
+            {(product.sold_out || product.coming_soon) && (
+              <div className="absolute inset-0 bg-black/40" />
+            )}
+            {/* SOLD OUT Badge */}
+            {product.sold_out && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="px-6 py-2 border border-white/80 rounded-full backdrop-blur-sm bg-white/10">
+                  <span className="text-white text-sm font-semibold tracking-[0.25em]">
+                    SOLD OUT
+                  </span>
+                </div>
+              </div>
+            )}
+            {/* COMING SOON Badge */}
             {product.coming_soon && (
               <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ backgroundColor: 'var(--color-gold)' }}>
                 <Clock className="w-3 h-3 text-black" />
@@ -80,7 +96,7 @@ export default function ProductCard({ product, index = 0 }) {
           <h3 className="text-white text-lg font-light mb-3 min-h-[3.5rem] line-clamp-2">{product.name}</h3>
 
           <div className="min-h-8 mt-auto flex items-baseline gap-2">
-            {!product.coming_soon && minPrice && (
+            {minPrice && (
               <>
                 <span className="text-white text-xl font-light">
                   {regionData.currency}{minPrice}

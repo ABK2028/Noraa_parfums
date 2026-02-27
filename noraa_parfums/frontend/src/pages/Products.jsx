@@ -22,9 +22,28 @@ export default function Products() {
     { id: 'travel', name: 'Travel Bottles' },
   ];
 
-  const filteredProducts = activeCategory === 'all'
-    ? products
-    : products.filter((product) => product.category === activeCategory);
+  let filteredProducts = [];
+  if (activeCategory === 'all') {
+    // Only show each product once (no unisex duplicates)
+    const seen = new Set();
+    filteredProducts = products.filter((product) => {
+      if (seen.has(product.name)) return false;
+      seen.add(product.name);
+      return true;
+    });
+  } else if (activeCategory === 'male') {
+    filteredProducts = products.filter((product) => product.category === 'male' || product.category === 'unisex');
+  } else if (activeCategory === 'female') {
+    filteredProducts = products.filter((product) => product.category === 'female' || product.category === 'unisex');
+  } else {
+    filteredProducts = products.filter((product) => product.category === activeCategory);
+  }
+
+  // Move sold out products to the end
+  filteredProducts = [
+    ...filteredProducts.filter((p) => !p.sold_out),
+    ...filteredProducts.filter((p) => p.sold_out),
+  ];
 
   return (
     <div className="min-h-screen pt-20" style={{ backgroundColor: 'var(--color-dark)' }}>
