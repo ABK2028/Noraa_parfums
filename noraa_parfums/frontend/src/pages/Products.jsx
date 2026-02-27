@@ -19,7 +19,7 @@ export default function Products() {
     { id: 'all', name: 'All' },
     { id: 'male', name: 'For Him' },
     { id: 'female', name: 'For Her' },
-    { id: 'travel', name: 'Travel' },
+    { id: 'travel', name: 'Travel Bottles' },
   ];
 
   const filteredProducts = activeCategory === 'all'
