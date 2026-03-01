@@ -6,6 +6,11 @@ import { useRegion } from '../components/RegionContext';
 import { Send, Sparkles } from 'lucide-react';
 import api from '../api';
 import { getPerfumeFinderProducts } from '../data/perfumeFinderCatalog';
+import { getProducts } from '../lib/perfumeStore';
+
+const REQUEST_SIZE_OPTIONS = [3, 5, 10, 12, 100];
+const REQUEST_YES_WORDS = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'please', 'y', 'confirm'];
+const REQUEST_NO_WORDS = ['no', 'nope', 'nah', 'not now', 'cancel', 'n'];
 
 const NOTE_GROUPS = {
   citrus: ['bergamot', 'lemon', 'orange', 'mandarin', 'grapefruit', 'lime', 'clementine', 'citrus'],
@@ -41,6 +46,48 @@ const normalize = (value = '') =>
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+const isAffirmativeReply = (value = '') => {
+  const text = normalize(value);
+  if (!text) return false;
+  return REQUEST_YES_WORDS.some((word) => text === word || text.includes(word));
+};
+
+const isNegativeReply = (value = '') => {
+  const text = normalize(value);
+  if (!text) return false;
+  return REQUEST_NO_WORDS.some((word) => text === word || text.includes(word));
+};
+
+const parseRequestedSize = (value = '') => {
+  const normalizedText = normalize(value);
+  const match = normalizedText.match(/(^|\s)(3|5|10|12|100)\s*(ml)?(\s|$)/);
+  if (!match) return '';
+
+  const sizeValue = Number(match[2]);
+  return REQUEST_SIZE_OPTIONS.includes(sizeValue) ? String(sizeValue) : '';
+};
+
+const findUnavailableNamedPerfume = (inputText, region, productNameSet) => {
+  const normalizedInput = normalize(inputText);
+  if (!normalizedInput || normalizedInput.length < 3) return null;
+
+  const products = getPerfumeFinderProducts(region);
+  const directMatch = products
+    .map((product) => ({ product, normalizedName: normalize(product.name) }))
+    .filter(({ normalizedName }) => (
+      normalizedInput === normalizedName
+      || normalizedInput.includes(normalizedName)
+      || normalizedName.includes(normalizedInput)
+    ))
+    .sort((a, b) => b.normalizedName.length - a.normalizedName.length)[0];
+
+  if (directMatch && !productNameSet.has(directMatch.normalizedName)) {
+    return directMatch.product.name;
+  }
+
+  return null;
+};
 
 const getAllNotes = (product) => {
   const top = product.notes?.top || [];
@@ -235,7 +282,13 @@ export default function PerfumeFinder() {
   const [recommendations, setRecommendations] = useState([]);
   const [isBooting, setIsBooting] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [requestFlow, setRequestFlow] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const productNameSet = useMemo(() => {
+    const names = getProducts(region).map((product) => normalize(product.name));
+    return new Set(names);
+  }, [region]);
 
   const typedIntent = useMemo(() => parseInputIntent(input), [input]);
 
@@ -301,17 +354,119 @@ export default function PerfumeFinder() {
     setMessages(historyWithUser);
     setInput('');
     setSuggestions([]);
-    setIsLoading(true);
 
-    const localReply = buildLocalMatchReply(finalMessage, region);
-    if (localReply) {
+    if (requestFlow?.step === 'ask') {
+      if (isAffirmativeReply(finalMessage)) {
+        setRequestFlow((prev) => (prev ? { ...prev, step: 'size' } : prev));
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'bot',
+            content: `Perfect. What bottle size would you like for ${requestFlow.perfumeName}? (3/5/10/12/100ml)` ,
+          },
+        ]);
+        return;
+      }
+
+      if (isNegativeReply(finalMessage)) {
+        setRequestFlow(null);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'bot',
+            content: 'No problem. Tell me another perfume or your scent style, and I will help you find a match.',
+          },
+        ]);
+        return;
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           role: 'bot',
-          content: localReply,
+          content: 'Please reply with yes or no. If yes, I will ask your bottle size and take you to Contact to send your request on WhatsApp.',
         },
       ]);
+      return;
+    }
+
+    if (requestFlow?.step === 'size') {
+      const selectedSize = parseRequestedSize(finalMessage);
+      if (!selectedSize) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'bot',
+            content: 'Please choose a valid size: 3ml, 5ml, 10ml, 12ml, or 100ml.',
+          },
+        ]);
+        return;
+      }
+
+      setRequestFlow((prev) => (prev ? { ...prev, size: selectedSize } : prev));
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          content: `Great. I set your request to ${requestFlow.perfumeName} (${selectedSize}ml). Tap the button below to continue to Contact.`,
+        },
+      ]);
+      return;
+    }
+
+    const unavailableNamedPerfume = findUnavailableNamedPerfume(finalMessage, region, productNameSet);
+    if (unavailableNamedPerfume) {
+      setRequestFlow({
+        perfumeName: unavailableNamedPerfume,
+        step: 'ask',
+        size: '',
+      });
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          content: `${unavailableNamedPerfume} is not currently listed on our Products page. Would you like to request this perfume?`,
+        },
+      ]);
+      return;
+    }
+
+    setIsLoading(true);
+
+    const localMatches = getLocalMatches(finalMessage, region, 3);
+    const localReply = localMatches.length > 0 ? buildLocalMatchReply(finalMessage, region) : null;
+
+    if (localReply && localMatches.length > 0) {
+      const bestMatchName = localMatches[0]?.product?.name || '';
+      const isBestMatchOnProductsPage = productNameSet.has(normalize(bestMatchName));
+
+      setMessages((prev) => {
+        const next = [
+          ...prev,
+          {
+            role: 'bot',
+            content: localReply,
+          },
+        ];
+
+        if (!isBestMatchOnProductsPage && bestMatchName) {
+          next.push({
+            role: 'bot',
+            content: `${bestMatchName} is not currently listed on our Products page. Would you like to request this perfume?`,
+          });
+        }
+
+        return next;
+      });
+
+      if (!isBestMatchOnProductsPage && bestMatchName) {
+        setRequestFlow({
+          perfumeName: bestMatchName,
+          step: 'ask',
+          size: '',
+        });
+      }
+
       setIsLoading(false);
       return;
     }
@@ -518,6 +673,94 @@ export default function PerfumeFinder() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {requestFlow && (
+              <div className="border-t px-4 py-4" style={{ borderColor: 'rgba(201, 169, 98, 0.2)' }}>
+                <h3 className="text-white text-sm font-medium mb-3">Perfume Request</h3>
+
+                {requestFlow.step === 'ask' && (
+                  <div className="rounded-lg px-3 py-3" style={{ backgroundColor: 'rgba(201, 169, 98, 0.08)', border: '1px solid rgba(201, 169, 98, 0.18)' }}>
+                    <p className="text-stone-300 text-sm mb-3">
+                      Would you like to request <span className="text-white">{requestFlow.perfumeName}</span>?
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRequestFlow((prev) => (prev ? { ...prev, step: 'size' } : prev));
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              role: 'bot',
+                              content: `Perfect. What bottle size would you like for ${requestFlow.perfumeName}? (3/5/10/12/100ml)`,
+                            },
+                          ]);
+                        }}
+                        className="px-4 py-2 rounded-lg text-sm"
+                        style={{ backgroundColor: 'var(--color-gold)', color: '#000' }}
+                      >
+                        Yes, request it
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRequestFlow(null);
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              role: 'bot',
+                              content: 'No problem. Tell me another perfume or your scent style, and I will help you find a match.',
+                            },
+                          ]);
+                        }}
+                        className="px-4 py-2 rounded-lg text-sm text-stone-300 border"
+                        style={{ borderColor: 'rgba(201, 169, 98, 0.35)' }}
+                      >
+                        No thanks
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {requestFlow.step === 'size' && (
+                  <div className="rounded-lg px-3 py-3" style={{ backgroundColor: 'rgba(201, 169, 98, 0.08)', border: '1px solid rgba(201, 169, 98, 0.18)' }}>
+                    <p className="text-stone-300 text-sm mb-3">
+                      Choose the bottle size for <span className="text-white">{requestFlow.perfumeName}</span>.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {REQUEST_SIZE_OPTIONS.map((size) => {
+                        const isActive = requestFlow.size === String(size);
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              setRequestFlow((prev) => (prev ? { ...prev, size: String(size) } : prev));
+                            }}
+                            className="px-3 py-1.5 rounded-full text-xs tracking-wide border transition-colors"
+                            style={{
+                              backgroundColor: isActive ? 'var(--color-gold)' : 'transparent',
+                              color: isActive ? '#000' : '#d6d3d1',
+                              borderColor: 'rgba(201, 169, 98, 0.45)',
+                            }}
+                          >
+                            {size}ml
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <Link
+                      to={`${createPageUrl('Contact')}?perfume=${encodeURIComponent(requestFlow.perfumeName)}&size=${encodeURIComponent(requestFlow.size)}`}
+                      className={`inline-flex items-center px-4 py-2 rounded-lg text-sm ${requestFlow.size ? '' : 'pointer-events-none opacity-50'}`}
+                      style={{ backgroundColor: 'var(--color-gold)', color: '#000' }}
+                    >
+                      Request on Contact Page
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, MessageCircle, Instagram, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,12 @@ import { useRegion } from '../components/RegionContext';
 
 export default function Contact() {
   const { region } = useRegion();
+  const location = useLocation();
+
+  const params = new URLSearchParams(location.search);
+  const requestedPerfume = params.get('perfume') || '';
+  const requestedSize = params.get('size') || '';
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,8 +23,35 @@ export default function Contact() {
   });
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    if (!requestedPerfume) return;
+
+    const subject = `Perfume Request: ${requestedPerfume}`;
+    const sizeText = requestedSize ? `${requestedSize}ml` : 'preferred size not selected';
+    const message = `Hi Noraa, I would like to request ${requestedPerfume} in ${sizeText}.`;
+
+    setFormData((prev) => ({
+      ...prev,
+      subject,
+      message,
+    }));
+  }, [requestedPerfume, requestedSize]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const whatsappPhone = contactInfo.whatsapp.phone;
+    const whatsappMessage = [
+      'Hello Noraa Parfums,',
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      `Subject: ${formData.subject}`,
+      `Message: ${formData.message}`,
+    ].join('\n');
+
+    const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
     setSubmitted(true);
     setTimeout(() => {
       setFormData({ name: '', email: '', subject: '', message: '' });
@@ -27,13 +61,13 @@ export default function Contact() {
 
   const contactInfo = region === 'UK' ? {
     instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://www.instagram.com/noraa_parfums/' },
-    whatsapp: { label: 'WHATSAPP', value: '+44 7831 640979', href: 'https://api.whatsapp.com/send?phone=447831640979' },
+    whatsapp: { label: 'WHATSAPP', value: '+44 7831 640979', href: 'https://wa.me/447831640979', phone: '447831640979' },
     email: { label: 'EMAIL', value: 'noraaparfums@gmail.com', href: 'mailto:noraaparfums@gmail.com' },
     snapchat: { label: 'SNAPCHAT', value: 'noraa_parfums', href: 'https://www.snapchat.com/add/noraa_parfums' },
     vinted: { label: 'VINTED', value: 'noraa_parfums', href: 'https://www.vinted.co.uk/member/132207890' }
   } : {
     instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://www.instagram.com/noraa_parfums/' },
-    whatsapp: { label: 'WHATSAPP', value: '+91 88489 47543', href: 'https://wa.me/918848947543' },
+    whatsapp: { label: 'WHATSAPP', value: '+91 88489 47543', href: 'https://wa.me/918848947543', phone: '918848947543' },
     email: { label: 'EMAIL', value: 'noraaparfums@gmail.com', href: 'mailto:noraaparfums@gmail.com' }
   };
 

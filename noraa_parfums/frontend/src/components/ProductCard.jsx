@@ -47,20 +47,18 @@ export default function ProductCard({ product, index = 0 }) {
             onMouseEnter={() => setImageIndex(1)}
             onMouseLeave={() => setImageIndex(0)}
           >
-            {/* Product Image */}
-            <img
+            <motion.img
               src={product.images?.[imageIndex] || product.images?.[0]}
               alt={product.name}
-              className={`w-full h-full object-cover transition duration-500 ${product.sold_out ? 'blur-sm scale-105' : ''}`}
+              className={`w-full h-full object-cover ${product.sold_out ? 'blur-sm' : ''}`}
+              animate={{ scale: isHovered ? 1.05 : 1 }}
+              transition={{ duration: 0.6 }}
             />
-            {/* Dark Gradient Overlay only for sold out or coming soon */}
-            {(product.sold_out || product.coming_soon) && (
-              <div className="absolute inset-0 bg-black/40" />
-            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             {/* SOLD OUT Badge */}
             {product.sold_out && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="px-6 py-2 border border-white/80 rounded-full backdrop-blur-sm bg-white/10">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <div className="px-6 py-2 border-2 border-white/80 rounded-full">
                   <span className="text-white text-sm font-semibold tracking-[0.25em]">
                     SOLD OUT
                   </span>
@@ -86,6 +84,18 @@ export default function ProductCard({ product, index = 0 }) {
           style={{
             backgroundColor: isFavorited ? 'var(--color-gold)' : 'rgba(0, 0, 0, 0.4)',
             color: isFavorited ? 'black' : 'white',
+          }}
+          onMouseEnter={(e) => {
+            if (!isFavorited) {
+              e.currentTarget.style.backgroundColor = 'rgba(201, 169, 98, 0.2)';
+              e.currentTarget.style.color = 'var(--color-gold)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isFavorited) {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+              e.currentTarget.style.color = 'white';
+            }
           }}
         >
           <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
