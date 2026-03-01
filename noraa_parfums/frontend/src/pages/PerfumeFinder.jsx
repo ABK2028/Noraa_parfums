@@ -259,7 +259,7 @@ export default function PerfumeFinder() {
       setMessages([
         {
           role: 'bot',
-          content: 'Welcome to Noraa Parfums. Describe your scent preferences and I will help you find the perfect match.',
+          content: "Welcome to Noraa Parfums! I'm your personal fragrance consultant, Noraa. I'll help you discover your perfect scent. Tell me, what kind of fragrances do you typically enjoy? Are you drawn to fresh and citrusy notes, or do you prefer something deeper and more mysterious like oud and leather?",
         },
       ]);
     }, 1200);
@@ -267,15 +267,12 @@ export default function PerfumeFinder() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isLoading]);
+  // Removed auto-scroll on new messages as requested
 
   useEffect(() => {
     const query = input.trim();
 
+    // Remove default product name suggestions
     if (!query || isBooting) {
       setSuggestions([]);
     } else {
@@ -291,8 +288,8 @@ export default function PerfumeFinder() {
     const orderedMatches = query
       ? getMatchesInCatalogOrder(query, region)
       : [];
-
-    setRecommendations(orderedMatches);
+    // Only set recommendations if there is a query
+    setRecommendations(query ? orderedMatches : []);
   }, [input, region, isBooting]);
 
   const sendMessage = async (text) => {
@@ -480,31 +477,6 @@ export default function PerfumeFinder() {
                     disabled={isLoading || isBooting}
                     className="w-full bg-stone-950 border border-stone-800 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-amber-400 placeholder:text-stone-600"
                   />
-
-                  {suggestions.length > 0 && (
-                    <div
-                      className="absolute left-0 right-0 mt-2 rounded-lg overflow-hidden z-20"
-                      style={{
-                        backgroundColor: 'rgba(10, 10, 10, 0.98)',
-                        border: '1px solid rgba(201, 169, 98, 0.25)',
-                      }}
-                    >
-                      {suggestions.map((product) => (
-                        <button
-                          key={product.id}
-                          type="button"
-                          className="w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-amber-300/10 transition-colors"
-                          style={{ borderColor: 'rgba(201, 169, 98, 0.12)' }}
-                          onClick={() => setInput(product.name)}
-                        >
-                          <p className="text-white text-sm font-medium">{product.name}</p>
-                          <p className="text-stone-400 text-xs mt-1">
-                            Top: {(product.notes?.top || []).join(', ')} • Heart: {(product.notes?.heart || []).join(', ')} • Base: {(product.notes?.base || []).join(', ')}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 <button
                   type="submit"
