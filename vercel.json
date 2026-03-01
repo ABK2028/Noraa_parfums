@@ -1,7 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "installCommand": "cd noraa_parfums/frontend && npm install",
-  "buildCommand": "cd noraa_parfums/frontend && npm run build",
-  "outputDirectory": "noraa_parfums/frontend/dist"
-}
