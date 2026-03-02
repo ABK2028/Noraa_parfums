@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: noraa-backend
+    runtime: node
+    rootDir: noraa_parfums/backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+
+  - type: web
+    name: noraa-frontend
+    runtime: static
+    rootDir: noraa_parfums/frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 18
