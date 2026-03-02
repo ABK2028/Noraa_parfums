@@ -208,7 +208,7 @@ const PRODUCTS = [
     coming_soon: false,
   },
   {
-    id: '9',
+    id: '12',
     name: '12ml Travel Bottle',
     brand: 'Noraa',
     category: 'travel',
