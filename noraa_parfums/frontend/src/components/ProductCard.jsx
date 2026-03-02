@@ -9,8 +9,8 @@ import { getFavorites, toggleFavorite } from '../lib/perfumeStore';
 export default function ProductCard({ product, index = 0 }) {
   const { regionData } = useRegion();
   const [isHovered, setIsHovered] = useState(false);
-  const [imageIndex, setImageIndex] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+  const hasSecondImage = Boolean(product.images?.[1]);
 
   const favorites = useMemo(() => getFavorites(), [refreshKey]);
   const isFavorited = favorites.some((f) => f.product_id === product.id);
@@ -42,18 +42,23 @@ export default function ProductCard({ product, index = 0 }) {
         onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(120, 113, 108, 0.5)')}
       >
         <Link to={`${createPageUrl('ProductDetail')}/${product.id}`}>
-          <div
-            className="relative aspect-square overflow-hidden rounded-2xl"
-            onMouseEnter={() => setImageIndex(1)}
-            onMouseLeave={() => setImageIndex(0)}
-          >
-            <motion.img
-              src={product.images?.[imageIndex] || product.images?.[0]}
-              alt={product.name}
-              className={`w-full h-full object-cover ${product.sold_out ? 'blur-sm' : ''}`}
+          <div className="relative aspect-square overflow-hidden rounded-2xl">
+            <motion.div
+              className="absolute inset-0"
               animate={{ scale: isHovered ? 1.05 : 1 }}
-              transition={{ duration: 0.6 }}
-            />
+              transition={{ duration: 0.2 }}
+            >
+              <img
+                src={product.images?.[0]}
+                alt={product.name}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-150 ${isHovered && hasSecondImage ? 'opacity-0' : 'opacity-100'} ${product.sold_out ? 'blur-sm' : ''}`}
+              />
+              <img
+                src={product.images?.[1] || product.images?.[0]}
+                alt={product.name}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-150 ${isHovered && hasSecondImage ? 'opacity-100' : 'opacity-0'} ${product.sold_out ? 'blur-sm' : ''}`}
+              />
+            </motion.div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             {/* SOLD OUT Badge */}
             {product.sold_out && (
