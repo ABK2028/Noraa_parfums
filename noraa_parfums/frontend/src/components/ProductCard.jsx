@@ -41,7 +41,7 @@ export default function ProductCard({ product, index = 0 }) {
         onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(201, 169, 98, 0.3)')}
         onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(120, 113, 108, 0.5)')}
       >
-        <Link to={`${createPageUrl('ProductDetail')}/${product.id}`}>
+        <Link to={`${createPageUrl('ProductDetail')}/${product.id}`} className="block h-full">
           <div className="relative aspect-square overflow-hidden rounded-2xl">
             <motion.div
               className="absolute inset-0"
@@ -78,6 +78,26 @@ export default function ProductCard({ product, index = 0 }) {
               </div>
             )}
           </div>
+
+          <div className="p-5 flex-1 flex flex-col">
+            <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(201, 169, 98, 0.7)' }}>{product.brand}</p>
+            <h3 className="text-white text-lg font-light mb-3 min-h-[3.5rem] line-clamp-2">{product.name}</h3>
+
+            <div className="min-h-8 mt-auto flex items-baseline gap-2">
+              {minPrice && (
+                <>
+                  <span className="text-white text-xl font-light">
+                    {regionData.currency}{minPrice}
+                  </span>
+                  {maxPrice !== minPrice && (
+                    <span className="text-stone-500 text-sm">
+                      - {regionData.currency}{maxPrice}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </Link>
 
         <button
@@ -85,7 +105,7 @@ export default function ProductCard({ product, index = 0 }) {
             e.preventDefault();
             handleToggleFavorite();
           }}
-          className="absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-sm transition-all duration-300"
+          className="absolute top-4 right-4 z-10 p-2.5 rounded-full backdrop-blur-sm transition-all duration-300"
           style={{
             backgroundColor: isFavorited ? 'var(--color-gold)' : 'rgba(0, 0, 0, 0.4)',
             color: isFavorited ? 'black' : 'white',
@@ -106,25 +126,6 @@ export default function ProductCard({ product, index = 0 }) {
           <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
         </button>
 
-        <div className="p-5 flex-1 flex flex-col">
-          <p className="text-xs tracking-widest mb-1" style={{ color: 'rgba(201, 169, 98, 0.7)' }}>{product.brand}</p>
-          <h3 className="text-white text-lg font-light mb-3 min-h-[3.5rem] line-clamp-2">{product.name}</h3>
-
-          <div className="min-h-8 mt-auto flex items-baseline gap-2">
-            {minPrice && (
-              <>
-                <span className="text-white text-xl font-light">
-                  {regionData.currency}{minPrice}
-                </span>
-                {maxPrice !== minPrice && (
-                  <span className="text-stone-500 text-sm">
-                    - {regionData.currency}{maxPrice}
-                  </span>
-                )}
-              </>
-            )}
-          </div>
-        </div>
       </div>
     </motion.div>
   );
