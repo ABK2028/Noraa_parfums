@@ -4,11 +4,11 @@ import { createPageUrl } from '../utils';
 import { motion } from 'framer-motion';
 import { useRegion } from '../components/RegionContext';
 import { Send, Sparkles } from 'lucide-react';
-import api from '../api';
 import { getPerfumeFinderProducts } from '../data/perfumeFinderCatalog';
 import { getProducts } from '../lib/perfumeStore';
 
 const REQUEST_SIZE_OPTIONS = [3, 5, 10, 12, 100];
+const MAX_NOTE_FILTER_STEPS = 5;
 const REQUEST_YES_WORDS = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'please', 'y', 'confirm'];
 const REQUEST_NO_WORDS = ['no', 'nope', 'nah', 'not now', 'cancel', 'n'];
 
@@ -87,6 +87,30 @@ const findUnavailableNamedPerfume = (inputText, region, productNameSet) => {
   }
 
   return null;
+};
+
+const findNamedPerfumesInInput = (inputText, region) => {
+  const normalizedInput = normalize(inputText);
+  if (!normalizedInput || normalizedInput.length < 3) return [];
+
+  const products = getPerfumeFinderProducts(region);
+  const seen = new Set();
+
+  return products
+    .filter((product) => {
+      const normalizedName = normalize(product.name);
+      return (
+        normalizedInput === normalizedName
+        || normalizedInput.includes(normalizedName)
+        || normalizedName.includes(normalizedInput)
+      );
+    })
+    .filter((product) => {
+      const key = normalize(product.name);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 };
 
 const getAllNotes = (product) => {
@@ -274,12 +298,69 @@ const buildFallbackReply = (message, region) => {
   return 'Great choice. Tell me your preferred scent style (fresh, floral, woody, or spicy), and when you plan to wear it, and I will recommend the best match.';
 };
 
+const getCatalogNoteTerms = (region) => {
+  const products = getPerfumeFinderProducts(region);
+  const notes = products
+    .flatMap((product) => getAllNotes(product))
+    .map((note) => normalize(note))
+    .filter(Boolean);
+
+  return Array.from(new Set(notes));
+};
+
+const extractInputNoteTerms = (inputText, region) => {
+  const normalizedText = normalize(inputText);
+  if (!normalizedText) return [];
+
+  const catalogTerms = getCatalogNoteTerms(region).sort((a, b) => b.length - a.length);
+  const inputTokens = normalizedText.split(' ').filter(Boolean);
+
+  const directMatches = catalogTerms.filter((term) =>
+    normalizedText.includes(term)
+    || term.includes(normalizedText)
+  );
+
+  const tokenMatches = inputTokens
+    .filter((token) => token.length >= 3)
+    .filter((token) => catalogTerms.some((term) => term.includes(token)));
+
+  const aliasMatches = Object.keys(NOTE_GROUP_ALIASES).filter((alias) =>
+    normalizedText.includes(alias) || inputTokens.includes(alias)
+  );
+
+  const merged = [...directMatches, ...tokenMatches, ...aliasMatches]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  const unique = [];
+  merged.forEach((term) => {
+    if (!unique.some((saved) => saved.includes(term) || term.includes(saved))) {
+      unique.push(term);
+    }
+  });
+
+  return unique.slice(0, 3);
+};
+
+const getProductsByNoteFilters = (region, noteFilters) => {
+  if (!Array.isArray(noteFilters) || noteFilters.length === 0) return [];
+  const products = getPerfumeFinderProducts(region);
+  return products.filter((product) => noteFilters.every((term) => matchesTerm(product, term)));
+};
+
+const formatPerfumeNameList = (products, max = 8) =>
+  products
+    .slice(0, max)
+    .map((product, index) => `${index + 1}) ${product.name}`)
+    .join(' | ');
+
 export default function PerfumeFinder() {
   const { region } = useRegion();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [noteFilters, setNoteFilters] = useState([]);
   const [isBooting, setIsBooting] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [requestFlow, setRequestFlow] = useState(null);
@@ -338,17 +419,36 @@ export default function PerfumeFinder() {
     if (isBooting) return;
 
     const query = input.trim();
+    if (!query && noteFilters.length > 0) {
+      setRecommendations(getProductsByNoteFilters(region, noteFilters));
+      return;
+    }
+
     const orderedMatches = query
       ? getMatchesInCatalogOrder(query, region)
       : [];
     // Only set recommendations if there is a query
     setRecommendations(query ? orderedMatches : []);
-  }, [input, region, isBooting]);
+  }, [input, region, isBooting, noteFilters]);
 
   const sendMessage = async (text) => {
     const finalMessage = text?.trim();
 
     if (!finalMessage || isLoading || isBooting) return;
+
+    const normalizedMessage = normalize(finalMessage);
+    if (normalizedMessage.includes('reset note') || normalizedMessage.includes('clear note') || normalizedMessage.includes('start over')) {
+      setNoteFilters([]);
+      setRecommendations([]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: finalMessage },
+        { role: 'bot', content: `Done. Note filters cleared. Tell me one note you like (for example: vanilla), and we can refine step-by-step up to ${MAX_NOTE_FILTER_STEPS} notes.` },
+      ]);
+      setInput('');
+      setSuggestions([]);
+      return;
+    }
 
     const historyWithUser = [...messages, { role: 'user', content: finalMessage }];
     setMessages(historyWithUser);
@@ -414,6 +514,95 @@ export default function PerfumeFinder() {
       return;
     }
 
+    const mentionedPerfumes = findNamedPerfumesInInput(finalMessage, region);
+    if (mentionedPerfumes.length > 1) {
+      const availableNames = mentionedPerfumes
+        .map((product) => product.name)
+        .filter((name) => productNameSet.has(normalize(name)));
+
+      const unavailableNames = mentionedPerfumes
+        .map((product) => product.name)
+        .filter((name) => !productNameSet.has(normalize(name)));
+
+      setRecommendations(mentionedPerfumes.slice(0, 8));
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          content: `I found multiple perfumes in your message: ${mentionedPerfumes.map((product) => product.name).join(' | ')}. Tell me one perfume to focus on, or give me notes and I’ll keep filtering.${unavailableNames.length ? ` Not currently on Products page: ${unavailableNames.join(', ')}.` : ''}${availableNames.length ? ` Available now: ${availableNames.join(', ')}.` : ''}`,
+        },
+      ]);
+      return;
+    }
+
+    const detectedNotes = extractInputNoteTerms(finalMessage, region);
+    if (detectedNotes.length > 0) {
+      if (noteFilters.length >= MAX_NOTE_FILTER_STEPS) {
+        const lockedMatches = getProductsByNoteFilters(region, noteFilters);
+        setRecommendations(lockedMatches);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'bot',
+            content: `You already reached ${MAX_NOTE_FILTER_STEPS}/${MAX_NOTE_FILTER_STEPS} notes (${noteFilters.map((term) => formatPreferenceLabel(term)).join(', ')}). Type “reset notes” to start a new filter set.`,
+          },
+        ]);
+        return;
+      }
+
+      const nextNote = detectedNotes.find((note) => !noteFilters.includes(note));
+      if (!nextNote && noteFilters.length > 0) {
+        const sameMatches = getProductsByNoteFilters(region, noteFilters);
+        setRecommendations(sameMatches);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'bot',
+            content: `That note is already in your filter. Current filters: ${noteFilters.map((term) => formatPreferenceLabel(term)).join(', ')}. Add a different note to continue (${noteFilters.length}/${MAX_NOTE_FILTER_STEPS}).`,
+          },
+        ]);
+        return;
+      }
+
+      const activeFilters = nextNote
+        ? [...noteFilters, nextNote].slice(0, MAX_NOTE_FILTER_STEPS)
+        : noteFilters.slice(0, MAX_NOTE_FILTER_STEPS);
+
+      const fallbackSingle = noteFilters.length === 0 ? [detectedNotes[0]] : activeFilters;
+      const finalFilters = activeFilters.length === 0 ? fallbackSingle : activeFilters;
+      const filteredMatches = getProductsByNoteFilters(region, finalFilters);
+
+      setNoteFilters(finalFilters);
+      setRecommendations(filteredMatches);
+
+      const filterListText = finalFilters.map((term) => formatPreferenceLabel(term)).join(', ');
+      const stepText = `${finalFilters.length}/${MAX_NOTE_FILTER_STEPS}`;
+
+      if (finalFilters.length < MAX_NOTE_FILTER_STEPS) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'bot',
+            content: filteredMatches.length
+              ? `Step ${stepText}. Using ${filterListText}, I found ${filteredMatches.length} matches: ${formatPerfumeNameList(filteredMatches)}. Give me another note you like to refine further, or type “reset notes”.`
+              : `No perfumes with the same notes as you would like. Try a different next note, or type “reset notes”.`,
+          },
+        ]);
+        return;
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          content: filteredMatches.length
+            ? `Step ${stepText} complete. Final filters (${filterListText}) gave ${filteredMatches.length} matches: ${formatPerfumeNameList(filteredMatches)}. Type “reset notes” to try a new 5-step flow.`
+            : `No perfumes with the same notes as you would like. Type “reset notes” to try a different combination.`,
+        },
+      ]);
+      return;
+    }
+
     const unavailableNamedPerfume = findUnavailableNamedPerfume(finalMessage, region, productNameSet);
     if (unavailableNamedPerfume) {
       setRequestFlow({
@@ -471,33 +660,15 @@ export default function PerfumeFinder() {
       return;
     }
 
-    try {
-      const response = await api.post('/api/chatbot', {
-        message: finalMessage,
-        conversationHistory: historyWithUser,
-        region: region,
-      });
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'bot',
-          content: response.data?.response ?? buildFallbackReply(finalMessage, region),
-        },
-      ]);
-    } catch (error) {
-      console.error('Perfume Finder error:', error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'bot',
-          content: buildFallbackReply(finalMessage, region),
-        },
-      ]);
-      setRecommendations([]);
-    } finally {
-      setIsLoading(false);
-    }
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'bot',
+        content: buildFallbackReply(finalMessage, region),
+      },
+    ]);
+    setRecommendations([]);
+    setIsLoading(false);
   };
 
   const handleSubmit = (e) => {
@@ -653,7 +824,7 @@ export default function PerfumeFinder() {
               </div>
             </form>
 
-            {input.trim() && recommendations.length > 0 && (
+            {recommendations.length > 0 && (
               <div className="border-t px-4 py-4" style={{ borderColor: 'rgba(201, 169, 98, 0.2)' }}>
                 <h3 className="text-white text-sm font-medium mb-3">Perfume Recommendations</h3>
                 <div className="space-y-2 overflow-y-auto pr-1" style={{ maxHeight: '260px' }}>
