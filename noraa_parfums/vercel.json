@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "cd frontend && npm install",
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/dist"
+  "installCommand": "ROOT=$PWD; if [ -d frontend ]; then cd frontend; elif [ -d noraa_parfums/frontend ]; then cd noraa_parfums/frontend; fi; npm install; cd $ROOT",
+  "buildCommand": "ROOT=$PWD; if [ -d frontend ]; then cd frontend; elif [ -d noraa_parfums/frontend ]; then cd noraa_parfums/frontend; fi; npm run build; cd $ROOT; rm -rf dist; if [ -d frontend/dist ]; then cp -R frontend/dist dist; elif [ -d noraa_parfums/frontend/dist ]; then cp -R noraa_parfums/frontend/dist dist; fi",
+  "outputDirectory": "dist"
 }
