@@ -89,9 +89,6 @@ export default function ProductDetail() {
     base: 'Base Notes',
   };
 
-  const isTravelProduct = product.category === 'travel';
-  const detailImageFitClass = isTravelProduct ? 'object-contain p-6 bg-black/40' : 'object-cover';
-
   return (
     <div className="min-h-screen pt-20" style={{ backgroundColor: 'var(--color-dark)' }}>
       {/* Back Button */}
@@ -122,7 +119,7 @@ export default function ProductDetail() {
                 key={currentImageIndex}
                 src={product.images?.[currentImageIndex] || product.images?.[0]}
                 alt={product.name}
-                className={`w-full h-full ${detailImageFitClass}`}
+                className="w-full h-full object-cover"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
