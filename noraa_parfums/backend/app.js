@@ -22,12 +22,12 @@ const chatbotRoutes = require("./routes/chatbot");
 
 // === BASIC ROUTES ===
 app.get("/", (req, res) => {
-  res.send("Backend is working - Summer");
+  res.send("Backend is working - Noraa_parfums");
 });
 
 app.get("/api", (req, res) => {
   res.json({
-    message: "API Backend is working - Summer",
+    message: "API Backend is working - Noraa_parfums",
     endpoints: [
       "GET /api/products",
       "GET /api/products/:id",

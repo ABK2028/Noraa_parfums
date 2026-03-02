@@ -1,0 +1,15 @@
+{
+  "name": "noraa-parfums-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "install:backend": "npm --prefix noraa_parfums/backend install",
+    "install:frontend": "npm --prefix noraa_parfums/frontend install",
+    "postinstall": "npm run install:backend",
+    "build": "npm run install:frontend && npm --prefix noraa_parfums/frontend run build",
+    "start": "npm --prefix noraa_parfums/backend start"
+  }
+}
