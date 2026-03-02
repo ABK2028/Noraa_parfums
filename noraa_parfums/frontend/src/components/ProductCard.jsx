@@ -11,6 +11,8 @@ export default function ProductCard({ product, index = 0 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const hasSecondImage = Boolean(product.images?.[1]);
+  const isTravelProduct = product.category === 'travel';
+  const imageFitClass = isTravelProduct ? 'object-contain p-3 bg-black/40' : 'object-cover';
 
   const favorites = useMemo(() => getFavorites(), [refreshKey]);
   const isFavorited = favorites.some((f) => f.product_id === product.id);
@@ -51,12 +53,12 @@ export default function ProductCard({ product, index = 0 }) {
               <img
                 src={product.images?.[0]}
                 alt={product.name}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-150 ${isHovered && hasSecondImage ? 'opacity-0' : 'opacity-100'} ${product.sold_out ? 'blur-sm' : ''}`}
+                className={`absolute inset-0 w-full h-full ${imageFitClass} transition-opacity duration-150 ${isHovered && hasSecondImage ? 'opacity-0' : 'opacity-100'} ${product.sold_out ? 'blur-sm' : ''}`}
               />
               <img
                 src={product.images?.[1] || product.images?.[0]}
                 alt={product.name}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-150 ${isHovered && hasSecondImage ? 'opacity-100' : 'opacity-0'} ${product.sold_out ? 'blur-sm' : ''}`}
+                className={`absolute inset-0 w-full h-full ${imageFitClass} transition-opacity duration-150 ${isHovered && hasSecondImage ? 'opacity-100' : 'opacity-0'} ${product.sold_out ? 'blur-sm' : ''}`}
               />
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
