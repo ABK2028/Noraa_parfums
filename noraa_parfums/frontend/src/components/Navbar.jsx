@@ -4,14 +4,22 @@ import { createPageUrl } from '../utils';
 import { Menu, X, Heart, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RegionSelector from './RegionSelector';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsMenuOpen(false);
+    }
+  }, [isMobile]);
 
   const navLinks = [
     { name: 'Home', path: 'Home' },
