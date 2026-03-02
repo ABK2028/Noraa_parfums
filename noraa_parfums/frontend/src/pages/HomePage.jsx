@@ -16,7 +16,7 @@ export default function Home() {
     queryFn: () => Promise.resolve(getProducts(region)),
   });
 
-  const featuredProducts = products.filter(p => !p.coming_soon).slice(0, 3);
+  const featuredProducts = products.filter((product) => !product.coming_soon && !product.sold_out).slice(0, 3);
 
   return (
     <div style={{ backgroundColor: 'var(--color-dark)' }}>

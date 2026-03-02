@@ -197,6 +197,9 @@ export default function ProductDetail() {
                     </button>
                   ))}
                 </div>
+                <p className="text-stone-500 text-xs mt-3 tracking-wide">
+                  Prices are exclusive of shipping and delivery.
+                </p>
               </div>
             )}
 
