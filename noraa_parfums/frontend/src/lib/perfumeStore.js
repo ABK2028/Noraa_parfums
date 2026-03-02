@@ -168,7 +168,6 @@ const PRODUCTS = [
       { ml: 100, price: 30 },
     ],
     images: ['/images/Versace Crystal Noir (1).jpeg', '/images/Versace Crystal Noir (2).jpeg'],
-    coming_soon: true,
     sold_out: true,
   },
   {
