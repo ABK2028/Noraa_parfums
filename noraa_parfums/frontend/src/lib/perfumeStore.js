@@ -249,6 +249,12 @@ const PRODUCTS = [
 
 const FAVORITES_KEY = 'noraa_favorites';
 
+function notifyFavoritesUpdated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('favorites-updated'));
+  }
+}
+
 export function getProducts(region = 'UK') {
   return PRODUCTS.filter((product) => product.region === region);
 }
@@ -271,6 +277,7 @@ export function addFavorite(product_id) {
   if (!favorites.some((f) => f.product_id === product_id)) {
     favorites.push({ id: String(Date.now()), product_id });
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    notifyFavoritesUpdated();
   }
   return favorites;
 }
@@ -278,6 +285,7 @@ export function addFavorite(product_id) {
 export function removeFavorite(product_id) {
   const favorites = getFavorites().filter((item) => item.product_id !== product_id);
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+  notifyFavoritesUpdated();
   return favorites;
 }
 

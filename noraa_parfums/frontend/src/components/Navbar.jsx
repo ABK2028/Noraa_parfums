@@ -5,9 +5,11 @@ import { Menu, X, Heart, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RegionSelector from './RegionSelector';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { getFavorites } from '../lib/perfumeStore';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [favoritesCount, setFavoritesCount] = useState(0);
   const location = useLocation();
   const isMobile = useIsMobile();
 
@@ -20,6 +22,21 @@ export default function Navbar() {
       setIsMenuOpen(false);
     }
   }, [isMobile]);
+
+  useEffect(() => {
+    const syncFavoritesCount = () => {
+      setFavoritesCount(getFavorites().length);
+    };
+
+    syncFavoritesCount();
+    window.addEventListener('favorites-updated', syncFavoritesCount);
+    window.addEventListener('storage', syncFavoritesCount);
+
+    return () => {
+      window.removeEventListener('favorites-updated', syncFavoritesCount);
+      window.removeEventListener('storage', syncFavoritesCount);
+    };
+  }, []);
 
   const navLinks = [
     { name: 'Home', path: 'Home' },
@@ -68,12 +85,20 @@ export default function Navbar() {
 
             <Link
               to={createPageUrl('Favorites')}
-              className="p-2 text-stone-300 transition-colors"
+              className="relative p-2 text-stone-300 transition-colors"
               style={{ '--hover-color': 'var(--color-gold)' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-gold)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = '')}
             >
               <Heart className="w-5 h-5" />
+              {favoritesCount > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--color-gold)', color: '#000' }}
+                >
+                  {favoritesCount > 99 ? '99+' : favoritesCount}
+                </span>
+              )}
             </Link>
 
             <button
