@@ -6,13 +6,7 @@ const adminRoutes = require("./routes/admin");
 const app = express();
 
 // === MIDDLEWARE ===
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://noraa-parfums.netlify.app"
-  ],
-  credentials: true
-}));
+app.use(cors());
 
 app.use(express.json()); // middleware to parse JSON request bodies
 
@@ -73,5 +67,5 @@ app.use((req, res) => {
 // === START SERVER ===
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log("Server running");
 });
