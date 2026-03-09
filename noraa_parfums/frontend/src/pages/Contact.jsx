@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, MessageCircle, Instagram, Send } from 'lucide-react';
+import { Mail, MessageCircle, Instagram, Send, Star, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useRegion } from '../components/RegionContext';
+import { getAllReviews, loadFrontendReviews, saveFrontendReviews, getInitials } from '../components/reviews/reviewUtils';
 
 export default function Contact() {
   const { region } = useRegion();
@@ -22,6 +23,17 @@ export default function Contact() {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewForm, setReviewForm] = useState({
+    author_name: '',
+    author_title: '',
+    company: '',
+    rating: 0,
+    content: '',
+  });
+  const [reviews, setReviews] = useState(() => getAllReviews());
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!requestedPerfume) return;
@@ -36,6 +48,20 @@ export default function Contact() {
       message,
     }));
   }, [requestedPerfume, requestedSize]);
+
+  useEffect(() => {
+    const refreshReviews = () => {
+      setReviews(getAllReviews());
+    };
+
+    window.addEventListener('storage', refreshReviews);
+    window.addEventListener('reviews-updated', refreshReviews);
+
+    return () => {
+      window.removeEventListener('storage', refreshReviews);
+      window.removeEventListener('reviews-updated', refreshReviews);
+    };
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,6 +84,46 @@ export default function Contact() {
       setSubmitted(false);
     }, 3000);
   };
+
+  const handleReviewSubmit = (e) => {
+    e.preventDefault();
+
+    if (!reviewForm.author_name || !reviewForm.content || !reviewForm.rating) {
+      return;
+    }
+
+    setIsSubmittingReview(true);
+
+    const detailBits = [reviewForm.author_title, reviewForm.company].filter(Boolean).join(' | ');
+    const reviewText = reviewForm.content.trim();
+    const reviewLocation = detailBits || 'Verified Customer';
+
+    const newReview = {
+      id: Date.now(),
+      name: reviewForm.author_name.trim(),
+      initials: getInitials(reviewForm.author_name),
+      rating: Number(reviewForm.rating) || 5,
+      text: reviewText,
+      location: reviewLocation,
+      created_at: new Date().toISOString(),
+    };
+
+    const localReviews = loadFrontendReviews();
+    const updatedLocalReviews = [newReview, ...localReviews];
+    saveFrontendReviews(updatedLocalReviews);
+    setReviews(getAllReviews());
+    window.dispatchEvent(new Event('reviews-updated'));
+
+    setShowReviewForm(false);
+    setReviewForm({ author_name: '', author_title: '', company: '', rating: 0, content: '' });
+    setHoverRating(0);
+    setIsSubmittingReview(false);
+  };
+
+  const avgRating =
+    reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviews.length).toFixed(1)
+      : null;
 
   const contactInfo = region === 'UK' ? {
     instagram: { label: 'INSTAGRAM', value: '@noraa_parfums', href: 'https://www.instagram.com/noraa_parfums/' },
@@ -235,6 +301,216 @@ export default function Contact() {
                 )}
               </form>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section className="py-16 px-4" style={{ backgroundColor: 'var(--color-dark-lighter)' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            >
+              <p className="tracking-[0.3em] text-xs mb-6" style={{ color: 'var(--color-gold)' }}>
+                WHAT OUR CLIENTS SAY
+              </p>
+              <h2 className="text-4xl md:text-5xl font-light text-white mb-4">
+                Customer <span className="italic" style={{ color: 'var(--color-gold)' }}>Reviews</span>
+              </h2>
+              <p className="text-stone-400 text-lg mb-8">
+                Discover the experiences of those who wear our fragrances.
+              </p>
+            </motion.div>
+
+            {avgRating && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
+                className="inline-flex items-center gap-3 rounded-full px-6 py-2 mb-8"
+                style={{
+                  backgroundColor: 'rgba(212,175,55,0.1)',
+                  border: '1px solid rgba(212,175,55,0.2)',
+                }}
+              >
+                <span className="text-2xl font-light text-white">{avgRating}</span>
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      className={`w-4 h-4 ${s <= Math.round(Number(avgRating)) ? 'fill-amber-400 text-amber-400' : 'text-stone-700'}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-stone-500 text-sm">({reviews.length} reviews)</span>
+              </motion.div>
+            )}
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.25, ease: 'easeOut' }}
+              className="mt-2"
+            >
+              <Button
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                className="text-black text-sm tracking-widest px-8"
+                style={{ backgroundColor: 'var(--color-gold)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold-light)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-gold)'}
+              >
+                {showReviewForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                {showReviewForm ? 'Cancel' : 'Write a Review'}
+              </Button>
+            </motion.div>
+          </div>
+
+          {showReviewForm && (
+            <div className="max-w-xl mx-auto px-4 mb-12">
+              <form
+                onSubmit={handleReviewSubmit}
+                className="rounded-2xl p-6 space-y-4"
+                style={{
+                  backgroundColor: 'var(--color-dark)',
+                  border: '1px solid rgba(212,175,55,0.15)',
+                }}
+              >
+                <h3 className="font-light text-white text-lg">Share your experience</h3>
+
+                <div>
+                  <label className="text-xs tracking-widest text-stone-500 mb-2 block">YOUR RATING</label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        type="button"
+                        key={s}
+                        onMouseEnter={() => setHoverRating(s)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setReviewForm((prev) => ({ ...prev, rating: s }))}
+                      >
+                        <Star
+                          className={`w-7 h-7 transition-colors ${s <= (hoverRating || reviewForm.rating) ? 'fill-amber-400 text-amber-400' : 'text-stone-700'}`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs tracking-widest text-stone-500 mb-1 block">YOUR NAME *</label>
+                    <Input
+                      value={reviewForm.author_name}
+                      onChange={(e) => setReviewForm((prev) => ({ ...prev, author_name: e.target.value }))}
+                      placeholder="Jane Doe"
+                      required
+                      className="bg-stone-900 border-stone-700 text-white placeholder:text-stone-600 focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs tracking-widest text-stone-500 mb-1 block">TITLE / ROLE</label>
+                    <Input
+                      value={reviewForm.author_title}
+                      onChange={(e) => setReviewForm((prev) => ({ ...prev, author_title: e.target.value }))}
+                      placeholder="Fragrance Enthusiast"
+                      className="bg-stone-900 border-stone-700 text-white placeholder:text-stone-600 focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs tracking-widest text-stone-500 mb-1 block">COMPANY</label>
+                  <Input
+                    value={reviewForm.company}
+                    onChange={(e) => setReviewForm((prev) => ({ ...prev, company: e.target.value }))}
+                    placeholder="Acme Inc."
+                    className="bg-stone-900 border-stone-700 text-white placeholder:text-stone-600 focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs tracking-widest text-stone-500 mb-1 block">YOUR REVIEW *</label>
+                  <Textarea
+                    value={reviewForm.content}
+                    onChange={(e) => setReviewForm((prev) => ({ ...prev, content: e.target.value }))}
+                    placeholder="Tell us about your experience..."
+                    rows={4}
+                    required
+                    className="bg-stone-900 border-stone-700 text-white placeholder:text-stone-600 focus:border-amber-400"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isSubmittingReview || !reviewForm.rating}
+                  className="w-full text-black tracking-widest text-sm"
+                  style={{ backgroundColor: 'var(--color-gold)' }}
+                >
+                  {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                </Button>
+              </form>
+            </div>
+          )}
+
+          <div className="px-4 pb-4">
+            {reviews.length === 0 ? (
+              <div className="text-center py-20 text-stone-600">
+                <Star className="w-12 h-12 mx-auto mb-3 text-stone-800" />
+                <p className="text-lg font-light text-stone-500">No reviews yet. Be the first to share your experience.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+                {reviews.map((review, index) => (
+                  <motion.div
+                    key={review.id ?? `fallback-${index}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-60px' }}
+                    transition={{ duration: 0.6, delay: Math.min(index * 0.06, 0.3), ease: 'easeOut' }}
+                    className="rounded-2xl p-6 border h-[360px] flex flex-col"
+                    style={{
+                      backgroundColor: 'var(--color-dark)',
+                      borderColor: 'rgba(201,169,98,0.2)',
+                    }}
+                  >
+                    <div className="flex gap-0.5 mb-3">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={`${review.id ?? `fallback-${index}`}-star-${i}`}
+                          className={`w-4 h-4 ${i < Number(review.rating || 0) ? 'fill-amber-400 text-amber-400' : 'text-stone-700'}`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-stone-300 text-sm leading-relaxed mt-4 mb-6 font-light italic flex-1 overflow-y-auto">"{review.text}"</p>
+                    <div className="flex items-center gap-3 pt-4 border-t mt-2" style={{ borderColor: 'rgba(201,169,98,0.15)' }}>
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-medium tracking-wider"
+                        style={{
+                          backgroundColor: 'rgba(201,169,98,0.12)',
+                          color: 'var(--color-gold)',
+                          border: '1px solid rgba(201,169,98,0.3)',
+                        }}
+                      >
+                        {review.initials}
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-medium">{review.name}</p>
+                        <p className="text-stone-500 text-xs tracking-wide">{review.location}</p>
+                        <p className="text-stone-600 text-[11px] mt-1">
+                          {review.created_at ? new Date(review.created_at).toLocaleDateString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

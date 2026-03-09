@@ -134,7 +134,7 @@ export default function About() {
       </section>
 
       {/* What Defines Us */}
-      <section className="py-24 px-4" style={{ backgroundColor: 'rgba(10, 10, 10, 0.5)' }}>
+      <section className="py-24 px-4" style={{ backgroundColor: 'var(--color-dark-lighter)' }}>
         <div className="max-w-7xl mx-auto">
           <motion.h2
             initial={{ opacity: 0, y: 10 }}

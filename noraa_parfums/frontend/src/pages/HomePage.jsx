@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRegion } from '../components/RegionContext';
 import ProductCard from '../components/ProductCard';
 import { getProducts } from '../lib/perfumeStore';
+import Ring3DCarousel from '../components/reviews/Ring3DCarousel';
 
 export default function Home() {
   const { region } = useRegion();
@@ -169,6 +170,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Client Testimonials */}
+      <Ring3DCarousel />
 
       {/* CTA Section */}
       <section className="relative py-28 px-4">
