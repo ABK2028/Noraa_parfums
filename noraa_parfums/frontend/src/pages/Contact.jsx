@@ -329,7 +329,8 @@ export default function Contact() {
             {avgRating && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
                 className="inline-flex items-center gap-3 rounded-full px-6 py-2 mb-8"
                 style={{
@@ -352,7 +353,8 @@ export default function Contact() {
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.25, ease: 'easeOut' }}
               className="mt-2"
             >
@@ -468,7 +470,8 @@ export default function Contact() {
                   <motion.div
                     key={review.id ?? `fallback-${index}`}
                     initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-60px' }}
                     transition={{ duration: 0.6, delay: Math.min(index * 0.06, 0.3), ease: 'easeOut' }}
                     className="rounded-2xl p-6 border h-[360px] flex flex-col"
                     style={{
