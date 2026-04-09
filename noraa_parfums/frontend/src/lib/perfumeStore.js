@@ -16,7 +16,7 @@ const PRODUCTS = [
       { ml: 100, price: 30 },
     ],
     images: ['/images/Acqua Di Gio (1).jpeg', '/images/Acqua Di Gio (2).jpeg'],
-    sold_out: true,
+    sold_out: false,
   },
   {
     id: '100',
