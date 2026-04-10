@@ -96,8 +96,8 @@ const PRODUCTS = [
   },
   {
     id: '3',
-    name: 'Leather Ombre',
-    brand: 'Ombre Leather',
+    name: 'Ombre Leather',
+    brand: 'Tom Ford',
     category: 'male',
     region: 'UK',
     description: 'Rich leather fragrance with spicy cardamom and earthy patchouli depth.',

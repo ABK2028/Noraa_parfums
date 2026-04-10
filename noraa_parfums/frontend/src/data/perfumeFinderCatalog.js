@@ -278,7 +278,7 @@ const PERFUME_FINDER_PRODUCTS = [
   {
     id: 'pf-31',
     name: 'Ombre Leather',
-    brand: 'Noraa Parfums',
+    brand: 'Tom Ford',
     region: 'UK',
     notes: { top: ['Cardamom'], heart: ['Leather', 'Jasmine Sambac'], base: ['Amber', 'Moss', 'Patchouli'] },
     accords: ['Leather', 'Warm', 'Smoky'],
