@@ -110,7 +110,7 @@ const PRODUCTS = [
       { ml: 3, price: 1 },
       { ml: 100, price: 30 },
     ],
-    images: ['/images/Leather Ombre (1).jpeg', '/images/Leather ombre (2).jpeg'],
+    images: ['/images/Tom Ford Leather Ombre (1).jpeg', '/images/Tom Ford Leather Ombre (2).jpeg'],
     coming_soon: false,
   },
   {
