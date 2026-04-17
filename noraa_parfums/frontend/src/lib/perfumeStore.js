@@ -12,7 +12,7 @@ const PRODUCTS = [
       base: ['Patchouli', 'Cedar', 'White Musk'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Acqua Di Gio (1).jpeg', '/images/Acqua Di Gio (2).jpeg'],
@@ -31,7 +31,7 @@ const PRODUCTS = [
       base: ['Fir Resin', 'Cedar'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Baccarat Rouge 540 (1).jpeg', '/images/Baccarat Rouge 540 (2).jpeg'],
@@ -50,7 +50,7 @@ const PRODUCTS = [
       base: ['Cashmeran', 'Musk', 'Incense'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Parfum De Marly Delina (1).jpeg', '/images/Parfum De Marly Delina (2).jpeg'],
@@ -69,7 +69,7 @@ const PRODUCTS = [
       base: ['Vanilla', 'Praline', 'Sandalwood'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ["/images/Killian Paris Angel's Share (1).jpeg", "/images/Killian Paris Angel's Share (2).jpeg"],
@@ -88,7 +88,7 @@ const PRODUCTS = [
       base: ['Licorice', 'Amber', 'Patchouli', 'Sandalwood'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Dior Sauvage Elixir (1).jpeg', '/images/Dior Sauvage Elixir (2).jpeg'],
@@ -107,7 +107,7 @@ const PRODUCTS = [
       base: ['Patchouli', 'Amber', 'Moss'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Tom Ford Leather Ombre (1).jpeg', '/images/Tom Ford Leather Ombre (2).jpeg'],
@@ -126,7 +126,7 @@ const PRODUCTS = [
       base: ['Vanilla', 'Amber', 'Tonka Bean', 'Suede'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Stronger With You Intensely (1).jpeg', '/images/Stronger With You Intensely (2).jpeg'],
@@ -145,7 +145,7 @@ const PRODUCTS = [
       base: ['Vanilla', 'Patchouli', 'Cedar'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Yves saint laurent Black Opium over red (1).jpeg', '/images/Yves saint laurent Black Opium over red  (2).jpeg'],
@@ -164,7 +164,7 @@ const PRODUCTS = [
       base: ['Musk', 'Sandalwood', 'Amber'],
     },
     sizes: [
-      { ml: 3, price: 1 },
+      { ml: 3, price: 2 },
       { ml: 100, price: 30 },
     ],
     images: ['/images/Versace Crystal Noir (1).jpeg', '/images/Versace Crystal Noir (2).jpeg'],
